@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>재고관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/ima/prodList}">상품 관리</a></h1>
+        </div>
+    </div>
+
+    <span id="more" style="cursor: pointer;" onclick="if(story.style.display=='none') {story.style.display='';$('#aaa').attr('class', 'glyphicon glyphicon-minus');} else {story.style.display='none';$('#aaa').attr('class', 'glyphicon glyphicon-plus');}"><span id="aaa" class="glyphicon glyphicon-plus" aria-hidden="true">엑셀업로드</span></span>
+    <div id="story" style="display: none">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="#"  method="post" class="form-inline" role="form" enctype="multipart/form-data" id="fileUploadForm">
+            <input type="hidden" id="boardIdx" name="boardIdx" value="003"/>
+            <div class="form-group">
+                <label for="fileVal">상품 리스트 엑셀업로드</label>
+                <input type="file"  id="fileVal" name="file"/><br/>
+            </div>
+            <button type="submit" class="btn btn-danger" id="btnSubmit">업로드</button>
+        </form>
+        <div>
+            <p>| 상품코드 | 사이트 | 상품명 | 상품구분 | 사용여부 |</p>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="alert alert-success" id="success-alert" style="display: none">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Success! </strong>
+        상품 리스트 엑셀파일 업로드.
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+            <input type="hidden" name="pageNumber" id="pageNumber" />
+            <input type="hidden" name="callName" id="callName" value="getProdList" />
+            <div class="form-group">
+                <label for="prodCode">상품코드</label>
+                <input type="text" class="form-control" name="prodCode" id="prodCode" placeholder="상품코드" onkeydown="onKeyDown(this)" />
+            </div>
+            <div class="form-group">
+                <label for="prodName">상품명</label>
+                <input type="text" class="form-control" name="prodName" id="prodName" placeholder="상품명" onkeydown="onKeyDown(this)" />
+            </div>
+            <div class="form-group">
+                <label for="prodType">상품구분</label>
+                <select name="prodType" id="prodType" class="form-control">
+                    <option th:each="item : ${selectProdType}"
+                            th:value="${item.value}"
+                            th:text="${item.key}">상품구분</option>
+                </select>
+                <!--<input type="text" class="form-control" name="prodType" id="prodType" placeholder="상품구분" />-->
+            </div>
+            <div class="form-group">
+                <label for="mallSite">사이트</label>
+                <select name="mallSite" id="mallSite" class="form-control">
+                    <option th:each="item : ${selectSite}"
+                            th:value="${item.value}"
+                            th:text="${item.key}">사이트</option>
+                </select>
+                <!--<input type="text" class="form-control" name="mallSite" id="mallSite" placeholder="사이트" />-->
+            </div>
+            <div class="form-group">
+                <label for="useYn">사용여부</label>
+                <select name="useYn" id="useYn" class="form-control">
+                    <option th:each="item : ${selectUseYn}"
+                            th:value="${item.value}"
+                            th:text="${item.key}">사용여부</option>
+                </select>
+            </div>
+            <button type="button" class="btn pull-right btn-danger" onclick="getProdList()">검색</button>
+        </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+            <button type="button" class="btn btn-warning btn-xs" id="btnUseY" onclick="useYnChecked('Y')" >사용</button>
+            <button type="button" class="btn btn-danger btn-xs" id="btnUseN" onclick="useYnChecked('N')" >미사용</button>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <button type="button" class="btn btn-primary" id="btnExcel" onclick="downloadExcel()" >엑셀다운로드</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+            <table class="table table-bordered table-hover table-fixed">
+                <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="allCheckboxModule('check','checks[]')" id="check" /></th>
+                    <th class="text-center">상품코드</th>
+                    <th class="text-center">상품명</th>
+                    <th class="text-center">상품구분</th>
+                    <th class="text-center">사이트</th>
+                    <th class="text-center">사용여부</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getProdList(1);
+
+    function onKeyDown(obj) {
+        if(event.keyCode == 13) {
+            getProdList(1);
+        }
+    }
+
+    function allCheckboxModule(id, name){
+        if($("#"+id).prop("checked")) {
+            //해당화면에 전체 checkbox들을 체크해준다
+            $("input[name='"+name+"']").prop("checked",true);
+            // 전체선택 체크박스가 해제된 경우
+        } else {
+            //해당화면에 모든 checkbox들의 체크를해제시킨다.
+            $("input[name='"+name+"']").prop("checked",false);
+        }
+    }
+
+    var useYnChecked = function(useYn){
+        var msg1 = '';
+        var msg2 = '';
+        var msg3 = '';
+        if (useYn === 'Y') {
+            msg1 = '상품을 재고현황에 사용하시겠습니까?';
+            msg2 = '건의 주문을 정말 상품 재고현황에 사용하시겠습니까?';
+            msg3 = '사용처리하였습니다.'
+        } else {
+            msg1 = '상품을 재고현황에 미사용하시겠습니까?';
+            msg2 = '건의 주문을 정말 상품 재고현황에 미사용하시겠습니까?';
+            msg3 = '미사용처리하였습니다.'
+        }
+        if(!checkboxArrayValidate('checks[]')) return false;
+        if(!confirm(msg1)) return false;
+        var idx = '';
+        var j = 0;
+        $('input[name="checks[]"]').each(function(i,v){
+            if($(this).prop('checked')){
+                idx += (j===0 ? "'"+$(this).val()+"'" : ",'"+$(this).val()+"'");
+                j++;
+            }
+        });
+
+        var l = idx.split(',').length;
+        if(!confirm(l+msg2)){
+            return false;
+        }
+
+        $.ajax({
+            url:'/ima/prodUseYn.ajax',
+            type:'post',
+            data:{prodCodes:idx, useYn:useYn},
+            dataType:'json',
+            success:function(data){
+                if(data.size === l){
+                    alert(msg3);
+                    getProdList($("#pageNumber").val());
+                }else{
+                    alert(msg3);
+                    return false;
+                }
+            },
+            error:function(error){
+                console.log(error);
+            }
+        });
+    };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ZipAccountListMapper">
+    <select id="selectZipAccountListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT  zd.ADMINISTRATIVE_DISTRICT_CODE AS administrativeDistrictCode,
+        adl.ADMINISTRATIVE_DISTRICT_NAME AS administrativeDistrictName,
+        zd.ZIP_CODE AS zipCode,
+        ail.ADDRESS AS address,
+        ail.DETAIL_ADDRESS AS detailAddress,
+        ail.ACCOUNT_CODE AS accountCode,
+        ail.ACCOUNT_NAME AS accountName
+        from B_ZIP_DISTRICT_MAPPING_LIST zd
+        join E_ACCOUNT_INFO_LIST ail on zd.ZIP_CODE = ail.ZIP_CODE
+        join B_ADMINISTRATIVE_DISTRICT_LIST adl on adl.ADMINISTRATIVE_DISTRICT_CODE = zd.ADMINISTRATIVE_DISTRICT_CODE
+        WHERE 1=1
+        <if test="administrativeDistrictName !=null and administrativeDistrictName !=''">
+            AND adl.ADMINISTRATIVE_DISTRICT_NAME LIKE '%' + #{administrativeDistrictName} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+    <select id="selectZipAccountList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY adl.ADMINISTRATIVE_DISTRICT_NAME ASC) num,
+        zd.ADMINISTRATIVE_DISTRICT_CODE AS administrativeDistrictCode,
+        adl.ADMINISTRATIVE_DISTRICT_NAME AS administrativeDistrictName,
+        zd.ZIP_CODE AS zipCode,
+        ail.ADDRESS AS address,
+        ail.DETAIL_ADDRESS AS detailAddress,
+        ail.ACCOUNT_CODE AS accountCode,
+        ail.ACCOUNT_NAME AS accountName
+        from B_ZIP_DISTRICT_MAPPING_LIST zd
+        join E_ACCOUNT_INFO_LIST ail on zd.ZIP_CODE = ail.ZIP_CODE
+        join B_ADMINISTRATIVE_DISTRICT_LIST adl on adl.ADMINISTRATIVE_DISTRICT_CODE = zd.ADMINISTRATIVE_DISTRICT_CODE
+        WHERE 1=1
+        <if test="administrativeDistrictName !=null and administrativeDistrictName !=''">
+            AND adl.ADMINISTRATIVE_DISTRICT_NAME LIKE '%' + #{administrativeDistrictName} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/memberList2}">영업담당자(sfa)</a></h1>
+        </div>
+    </div>
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="javascript:getMemberList2(1);" method="post" class="form-inline" role="form" id="searchForm">
+                <input type="hidden" name="pageNumber" id="pageNumber" />
+                <input type="hidden" name="callName" id="callName" value="getMemberList2" />
+                <div class="form-group">
+                    <label for="searchSalesManagerName">영업담당자</label>
+                    <input type="text" class="form-control" name="searchSalesManagerName" id="searchSalesManagerName" placeholder="영업담당자" />
+                </div>
+                <button type="button" class="btn pull-right btn-danger" onclick="getMemberList2(1)">검색</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <button type="button" class="btn btn-primary" onclick="createMemberList2();">등록</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-fixed">
+                    <thead>
+                    <tr>
+                        <th class="text-center">팀</th>
+                        <th class="text-center">지역</th>
+                        <th class="text-center">영업담당자명</th>
+                        <th class="text-center">영업당당자코드</th>
+                        <th class="text-center">직급</th>
+                        <th class="text-center">전화번호</th>
+                        <th class="text-center">휴대전화</th>
+                        <th class="text-center">우편번호</th>
+                        <th class="text-center">주소</th>
+                        <th class="text-center">상세주소</th>
+                        <th class="text-center">비고</th>
+                        <!--<th class="text-center" style="width:180px;">등록자</th>-->
+                        <!--<th class="text-center" style="width:180px;">등록일</th>-->
+                        <th class="text-center function">기능</th>
+                    </tr>
+                    </thead>
+                    <tbody id="memberAccountInfoListBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<!-- Modal -->
+<div class="modal fade" id="createMemberList2Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="#" method="post" id="createMemberList2ModalForm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">영업담당자 등록</h4>
+            </div>
+            <div class="modal-body">
+                <!--<div class="row">-->
+                    <!--<div class="col-md-6 col-md-offset-3">-->
+                        <!--<form autocomplete="off" action="#" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post" class="form-horizontal" role="form">-->
+                            <input type="hidden" name="maimSeq" id="maimSeq" value="0" />
+                            <div class="form-group has-error">
+                                <label class="col-sm-3 control-label" for="salesManagerCode">영업담당자코드</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="salesManagerCode" id="salesManagerCode" placeholder="영업담당자코드" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="salesManagerName">영업담당자명</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="salesManagerName" id="salesManagerName" placeholder="영업담당자명" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="teamCode">팀코드</label>
+                                <div class="col-sm-8">
+                                    <!--<input type="text" name="teamCode" id="teamCode" placeholder="팀코드" class="form-control" />-->
+                                    <select name="teamCode" id="teamCode" class="form-control">
+                                        <option th:each="item : ${selectTeam}"
+                                                th:value="${item.value}"
+                                                th:text="${item.key}">팀코드</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="areaCode">지역코드</label>
+                                <div class="col-sm-8">
+                                    <!--<input type="text" name="areaCode" id="areaCode" placeholder="지역코드" class="form-control" />-->
+                                    <select name="areaCode" id="areaCode" class="form-control">
+                                        <option th:each="item : ${selectArea}"
+                                                th:value="${item.value}"
+                                                th:text="${item.key}">지역코드</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="rankCode">직급코드</label>
+                                <div class="col-sm-8">
+                                    <!--<input type="text" name="rankCode" id="rankCode" placeholder="직급코드" class="form-control" />-->
+                                    <select name="rankCode" id="rankCode" class="form-control">
+                                        <option th:each="item : ${selectRank}"
+                                                th:value="${item.value}"
+                                                th:text="${item.key}">직급코드</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="phoneNumber">전화번호</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="phoneNumber" id="phoneNumber" placeholder="전화번호" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="cellPhoneNumber">휴대전화</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="cellPhoneNumber" id="cellPhoneNumber" placeholder="휴대전화" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="zipCode">우편번호</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="zipCode" id="zipCode" placeholder="우편번호" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="address">주소</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="address" id="address" placeholder="주소" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="detailAddress">상세주소</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="detailAddress" id="detailAddress" placeholder="상세주소" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="remarks">비고</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="remarks" id="remarks" placeholder="비고" class="form-control" />
+                                </div>
+                            </div>
+
+                <div class="alert alert-warnning" id="warnning-alert" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert">x</button>
+                    <strong>경고! </strong>
+                    <p id="warnning-message"></p>
+                </div>
+                            <!--<span th:utext="${successMessage}"></span>-->
+                        <!--</form>-->
+                    <!--</div>-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveMemberList2();" id="createMemberList2Btn">등록</button>
+                <button type="button" class="btn btn-danger pull-right" onclick="deleteMemberList2();" id="deleteMemberList2Btn" style="display: none">삭제</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+    </form>
+    </div>
+</div>
+<!-- modal -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getMemberList2(1);
+</script>
+
+</body>
+</html>

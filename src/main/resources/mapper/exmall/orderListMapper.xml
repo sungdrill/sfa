@@ -1,0 +1,1174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.exmall.OrderListMapper">
+    <select id="selectOrderListCount2" resultType="int">
+        SELECT  count(*)
+          FROM  order_list
+         WHERE  1=1
+    </select>
+    <select id="selectOrderListCount" resultType="int">
+        SELECT  count(*)
+          FROM  (
+          select prodno as prodno, OM_DESC as omDesc, prodnm as prodnm, sum(SQTY) as sqty
+        from
+        (
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*1) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM not like '%1병%'
+        and b.OL_GOODSNM not like '%2병%'
+        and b.OL_GOODSNM not like '%3병%'
+        and b.OL_GOODSNM not like '%4병%'
+        and b.OL_GOODSNM not like '%1통%'
+        and b.OL_GOODSNM not like '%2통%'
+        and b.OL_GOODSNM not like '%3통%'
+        and b.OL_GOODSNM not like '%4통%'
+        and b.OL_GOODSNM not like '%5통%'
+        and b.OL_GOODSNM not like '%6통%'
+        and b.OL_GOODSNM not like '%7통%'
+        and b.OL_GOODSNM not like '%8통%'
+        and b.OL_GOODSNM not like '%9통%'
+        and b.OL_GOODSNM not like '%10통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,PRODNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*1) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%1병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*2) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%2병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*3) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%3병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*4) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%4병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*1) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%1통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*2) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%2통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*3) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%3통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*4) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%4통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*5) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%5통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*6) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%6통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*7) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%7통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*8) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%8통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*9) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%9통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*10) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN '2017-10-11'and '2017-10-11'
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%10통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        )tt
+        group by OM_DESC,prodnm
+        order by OM_DESC asc,PRODNO asc
+          ) XX
+         WHERE  1=1
+    </select>
+    <select id="selectOrderList2" parameterType="Map" resultType="Map">
+        SElECT  *
+          FROM  (
+                    SELECT  @rownum := @rownum + 1 as num,
+                    OL_ORDNO olOrdno,
+                    OL_SEQ olSeq,
+                    OL_GOODSCD olGoodscd,
+                    OL_GOODSNM olGoodsnm,
+                    OL_PRICE olPrice,
+                    OL_QTY olQty,
+                    OL_UNITNAME olUnitname,
+                    OL_GOODSMODEL olGoodsmodel,
+                    OL_GOODSSIZE olGoodssize,
+                    OL_GOODSCOLOR olGoodscolor,
+                    OL_DESC olDesc,
+                    OL_REGDATE olRegdate
+                    FROM  order_list, (SELECT @rownum :=0) AS R
+                    WHERE  1=1
+        ) XX
+        <if test="startPageNum != null and startPageNum != ''">
+            LIMIT #{endPageNum}, 20
+        </if>
+    </select>
+    <select id="selectOrderList" parameterType="Map" resultType="Map">
+       SElECT  *
+          FROM  (
+        select uploadDate as uploadDate, prodno as prodno, OM_DESC as omDesc, prodnm as prodnm, sum(SQTY) as sqty
+        from
+        (
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*1) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate} and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM not like '%1병%'
+        and b.OL_GOODSNM not like '%2병%'
+        and b.OL_GOODSNM not like '%3병%'
+        and b.OL_GOODSNM not like '%4병%'
+        and b.OL_GOODSNM not like '%1통%'
+        and b.OL_GOODSNM not like '%2통%'
+        and b.OL_GOODSNM not like '%3통%'
+        and b.OL_GOODSNM not like '%4통%'
+        and b.OL_GOODSNM not like '%5통%'
+        and b.OL_GOODSNM not like '%6통%'
+        and b.OL_GOODSNM not like '%7통%'
+        and b.OL_GOODSNM not like '%8통%'
+        and b.OL_GOODSNM not like '%9통%'
+        and b.OL_GOODSNM not like '%10통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,PRODNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*1) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%1병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*2) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%2병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*3) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%3병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*4) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%4병%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*1) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%1통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*2) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%2통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*3) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%3통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*4) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%4통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*5) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%5통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*6) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%6통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*7) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%7통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*8) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%8통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*9) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%9통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        union all
+
+        select
+        DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') uploadDate,
+        case
+        when b.OL_GOODSNM like '%키즈%' then 'PPD00005'
+        when b.OL_GOODSNM like '%바이탈%' then 'PPD00158'
+        when b.OL_GOODSNM like '%드롭스%' then 'PPD00212'
+        when b.OL_GOODSNM like '%위청장쾌%' then 'PPD00157'
+        when b.OL_GOODSNM like '%츄어블%' then 'PPD00004'
+        when b.OL_GOODSNM like '%은행%' then 'PPD00145'
+        when b.OL_GOODSNM like '%멀티%' then 'PPD00144'
+        when b.OL_GOODSNM like '%비타민C%' then 'PPD00142'
+        when b.OL_GOODSNM like '%B복합%' then 'PPD00143'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then 'PPD00001'
+        else b.OL_GOODSNM
+        end as PRODNO ,
+        OM_DESC,
+        case
+        when b.OL_GOODSNM like '%키즈%' then '데일리키즈'
+        when b.OL_GOODSNM like '%바이탈%' then '바이탈리티'
+        when b.OL_GOODSNM like '%드롭스%' then '디드롭스'
+        when b.OL_GOODSNM like '%위청장쾌%' then '위청장쾌'
+        when b.OL_GOODSNM like '%츄어블%' then '스탑츄어블'
+        when b.OL_GOODSNM like '%은행%' then '은행잎추출물'
+        when b.OL_GOODSNM like '%멀티%' then '멀티비타민'
+        when b.OL_GOODSNM like '%비타민C%' then '비타민C'
+        when b.OL_GOODSNM like '%B복합%' then 'B복합'
+        when b.OL_GOODSNM like '%플레인%' or b.OL_GOODSNM like '%플래인%' then '플레인모닝'
+        else b.OL_GOODSNM
+        end as PRODNM
+        ,sum(b.OL_QTY*10) as SQTY from order_mast a inner join order_list b on a.OM_ORDNO=b.OL_ORDNO
+        where 1=1
+        and DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d') BETWEEN #{regDate}and #{regDate}
+        and left(a.OM_ORDNO,2)!='S2'
+        and b.OL_GOODSNM like '%10통%'
+        group by DATE_FORMAT(a.OM_UPLOADDATE,'%Y-%m-%d'), OM_DESC,b.OL_GOODSNM
+        )tt
+        group by uploadDate, OM_DESC,prodnm
+        order by OM_DESC asc,PRODNO asc
+        ) XX
+    </select>
+</mapper>

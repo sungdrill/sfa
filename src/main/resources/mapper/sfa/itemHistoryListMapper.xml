@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ItemHistoryListMapper">
+    <select id="selectItemHistoryListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT  IHL.ITEM_CODE AS itemCode,
+                IML.ITEM_NAME AS itemName,
+                CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) AS updateDate,
+                IHL.BASIC_STOCK AS basicStock,
+                IHL.IN_ITEM AS inItem,
+                IHL.OUT_ITEM AS outItem,
+                IHL.CLOSING_STOCK AS closingStock
+        FROM I_ITEM_HISTORY_LIST IHL
+        INNER JOIN I_ITEM_MASTER_LIST IML ON IHL.ITEM_CODE = IML.ITEM_CODE
+        WHERE 1=1
+        <if test="itemCode !=null and itemCode !=''">
+            AND IHL.ITEM_CODE LIKE '%' + #{itemCode} + '%'
+        </if>
+        <if test="itemName !=null and itemName !=''">
+            AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'
+        </if>
+        <if test="searchMappingDate !=null and searchMappingDate !=''">
+            AND IHL.UPDATE_DATE = #{searchMappingDate}
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectItemHistoryList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY IHL.ITEM_CODE ASC, IHL.UPDATE_DATE ASC) NUM,
+                IHL.ITEM_CODE AS itemCode,
+                IML.ITEM_NAME AS itemName,
+                CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) AS updateDate,
+                IHL.BASIC_STOCK AS basicStock,
+                IHL.IN_ITEM AS inItem,
+                IHL.OUT_ITEM AS outItem,
+                IHL.CLOSING_STOCK AS closingStock
+        FROM I_ITEM_HISTORY_LIST IHL
+        INNER JOIN I_ITEM_MASTER_LIST IML ON IHL.ITEM_CODE = IML.ITEM_CODE
+        WHERE 1=1
+        <if test="itemCode !=null and itemCode !=''">
+            AND IHL.ITEM_CODE LIKE '%' + #{itemCode} + '%'
+        </if>
+        <if test="itemName !=null and itemName !=''">
+            AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'
+        </if>
+        <if test="searchMappingDate !=null and searchMappingDate !=''">
+            AND IHL.UPDATE_DATE = #{searchMappingDate}
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+        ORDER BY itemCode asc, updateDate desc
+    </select>
+</mapper>

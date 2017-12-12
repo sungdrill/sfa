@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ProdHistoryListMapper">
+    <select id="selectProdStandardListCount" parameterType="Map" resultType="int">
+        SELECT
+          COUNT(*)
+        FROM (
+            SELECT PROD_CODE, PROD_NAME
+            FROM I_PROD_MASTER_LIST
+            WHERE 1=1
+            AND MALL_SITE = 'DUOLAC'
+            AND USE_YN = 'Y'
+        <if test="prodCode !=null and prodCode !=''">
+            AND PROD_CODE LIKE '%' + #{prodCode} + '%'
+        </if>
+        <if test="prodName !=null and prodName !=''">
+            AND PROD_NAME LIKE '%' + #{prodName} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+    <select id="selectProdStandardList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY PROD_CODE ASC) NUM,
+                PROD_CODE AS prodCode,
+                PROD_NAME AS prodName
+        FROM I_PROD_MASTER_LIST
+        WHERE 1=1
+        AND MALL_SITE = 'DUOLAC'
+        AND USE_YN = 'Y'
+        <if test="prodCode !=null and prodCode !=''">
+            AND PROD_CODE LIKE '%' + #{prodCode} + '%'
+        </if>
+        <if test="prodName !=null and prodName !=''">
+            AND PROD_NAME LIKE '%' + #{prodName} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+
+
+
+
+
+    <select id="selectProdHistoryListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT  PHL.PROD_CODE AS prodCode,
+                PML.PROD_NAME AS prodName,
+                CONVERT(VARCHAR(7),PHL.INPUT_DATE, 120) AS updateDate,
+                PHL.BASIC_STOCK AS basicStock,
+                PHL.IN_ITEM AS inItem,
+                PHL.OUT_ITEM AS outItem,
+                PHL.CLOSING_STOCK AS closingStock
+        FROM I_PROD_HISTORY_LIST PHL
+        INNER JOIN I_PROD_MASTER_LIST PML ON PHL.PROD_CODE = PML.PROD_CODE
+        WHERE 1=1
+        <if test="prodCode !=null and prodCode !=''">
+            AND PHL.PROD_CODE LIKE '%' + #{prodCode} + '%'
+        </if>
+        <if test="prodName !=null and prodName !=''">
+            AND PML.PROD_NAME LIKE '%' + #{prodName} + '%'
+        </if>
+        <if test="searchMappingDate !=null and searchMappingDate !=''">
+            AND PML.UPDATE_DATE = #{searchMappingDate}
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectProdHistoryList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY PHL.PROD_CODE ASC, PHL.UPDATE_DATE ASC) NUM,
+                PHL.PROD_CODE AS prodCode,
+                PML.PROD_NAME AS prodName,
+                CONVERT(VARCHAR(7),PHL.INPUT_DATE, 120) AS updateDate,
+                PHL.BASIC_STOCK AS basicStock,
+                PHL.IN_ITEM AS inItem,
+                PHL.OUT_ITEM AS outItem,
+                PHL.CLOSING_STOCK AS closingStock
+        FROM I_PROD_HISTORY_LIST PHL
+        INNER JOIN I_PROD_MASTER_LIST PML ON PHL.PROD_CODE = PML.PROD_CODE
+        WHERE 1=1
+        <if test="prodCode !=null and prodCode !=''">
+            AND PHL.PROD_CODE LIKE '%' + #{prodCode} + '%'
+        </if>
+        <if test="prodName !=null and prodName !=''">
+            AND PML.PROD_NAME LIKE '%' + #{prodName} + '%'
+        </if>
+        <if test="searchMappingDate !=null and searchMappingDate !=''">
+            AND PML.UPDATE_DATE = #{searchMappingDate}
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

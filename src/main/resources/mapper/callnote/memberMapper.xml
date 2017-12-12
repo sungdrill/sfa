@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.callnote.MemberMapper">
+    <select id="selectMemberListCount" resultType="int">
+         SELECT
+               count(*)
+        FROM (
+               SELECT
+               *
+               FROM callNote.dbo.M_MEMBER
+               WHERE 1=1
+               AND DEPT='sal'
+        <if test="name != null and name != ''">
+            AND NAME like '%' + #{name} + '%'
+        </if>
+        ) MEMBER
+        INNER JOIN (
+               SELECT
+                     CODE_CD TEAM_CD, CODE_NM TEAM_NM, ORDERS TEAM_ORDERS
+               FROM callNote.dbo.C_CODE
+               WHERE 1=1
+               AND GRP_CD ='TEAM'
+        ) TEAM ON MEMBER.TEAM_CD = TEAM.TEAM_CD
+        INNER JOIN (
+               SELECT
+                     CODE_CD AREA_CD, CODE_NM AREA_NM, ORDERS AREA_ORDERS
+               FROM callNote.dbo.C_CODE
+               WHERE 1=1
+               AND GRP_CD='AREA'
+        ) AREA ON MEMBER.AREA = AREA.AREA_CD
+        INNER JOIN (
+               SELECT
+                     CODE_CD POSI_CD, CODE_NM POSI_NM, ORDERS POSI_ORDERS
+               FROM callNote.dbo.C_CODE
+               WHERE 1=1
+               AND GRP_CD='CPOSI'
+        ) CPOSI ON MEMBER.COMPANY_POSTION_CD = CPOSI.POSI_CD
+    </select>
+
+    <select id="selectMemberList" parameterType="Map" resultType="com.cellbiotech.model.callnote.MemberVO">
+		SELECT
+		*
+		FROM
+		(
+         SELECT
+               ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+               TEAM.TEAM_CD as teamCd,
+               TEAM_NM as teamNm,
+               TEAM.TEAM_ORDERS teamOrders,
+               AREA.AREA_CD areaCd,
+               AREA.AREA_NM areaNm,
+               AREA.AREA_ORDERS as areaOrders,
+               MEMBER.ID as memberId,
+               MEMBER.NAME as name,
+               isnull(MEMBER.PHONE,'') as phone,
+               isnull(MEMBER.MPHONE,'') as mphone,
+               isnull(MEMBER.ZIPCODE,'') as zipcode,
+               isnull(MEMBER.ADDR,'') as addr,
+               isnull(MEMBER.ADDR_DT,'') as addrDt,
+               isnull(MEMBER.MEMO,'') as memo,
+               CPOSI.POSI_CD as posiCd,
+               CPOSI.POSI_NM as posiNm,
+               CPOSI.POSI_ORDERS as posiOrders
+        FROM (
+               SELECT
+               *
+               FROM callNote.dbo.M_MEMBER
+               WHERE 1=1
+               AND DEPT='sal'
+        <if test="name != null and name != ''">
+            AND NAME like '%' + #{name} + '%'
+        </if>
+        ) MEMBER
+        INNER JOIN (
+               SELECT
+                     CODE_CD TEAM_CD, CODE_NM TEAM_NM, ORDERS TEAM_ORDERS
+               FROM callNote.dbo.C_CODE
+               WHERE 1=1
+               AND GRP_CD ='TEAM'
+        ) TEAM ON MEMBER.TEAM_CD = TEAM.TEAM_CD
+        INNER JOIN (
+               SELECT
+                     CODE_CD AREA_CD, CODE_NM AREA_NM, ORDERS AREA_ORDERS
+               FROM callNote.dbo.C_CODE
+               WHERE 1=1
+               AND GRP_CD='AREA'
+        ) AREA ON MEMBER.AREA = AREA.AREA_CD
+        INNER JOIN (
+               SELECT
+                     CODE_CD POSI_CD, CODE_NM POSI_NM, ORDERS POSI_ORDERS
+               FROM callNote.dbo.C_CODE
+               WHERE 1=1
+               AND GRP_CD='CPOSI'
+        ) CPOSI ON MEMBER.COMPANY_POSTION_CD = CPOSI.POSI_CD
+                --ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)
+        )XX
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

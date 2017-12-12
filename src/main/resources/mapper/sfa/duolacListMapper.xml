@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.DuolacListMapper">
+    <select id="selectDuolacListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+            SELECT    IP.ITEM_PRIORITY AS priority
+            , IP.ITEM_CODE AS itemCode
+            , IML.ITEM_NAME AS itemName
+            , ISNULL(DR.ONE_TIME, 0) AS oneTime
+            , ISNULL(DR.TWO_TIME, 0) AS twoTime
+            , ISNULL(DR.THREE_TIME, 0) AS threeTime
+            , ISNULL(DR.PROD_QTY_RETURN, 0) AS prodQtyReturn
+            , ISNULL(DR.PROD_QTY, 0) AS prodQty
+            , ISNULL(PRL.PROD_QTY, 0) AS exmallQty
+            FROM I_ITEM_PRIORITY IP
+            LEFT OUTER JOIN (
+                SELECT B.ITEM_CODE, A.RELEASE_DATE, A.ONE_TIME, A.TWO_TIME, A.THREE_TIME, A.PROD_QTY, A.PROD_QTY_RETURN
+                FROM I_DUOLAC_RELEASE A
+                INNER JOIN I_ITEM_PROD_LIST B ON A.PROD_CODE = B.PROD_CODE
+            ) DR ON IP.ITEM_CODE = DR.ITEM_CODE AND DR.RELEASE_DATE = CONVERT(DATE, #{searchDateInput}  )
+            LEFT OUTER JOIN (
+                SELECT B.ITEM_CODE, SUM(A.PROD_QTY) PROD_QTY
+                FROM I_PROD_RELEASE_LIST A
+                INNER JOIN I_ITEM_PROD_LIST B ON A.PROD_CODE = B.PROD_CODE
+                WHERE 1=1
+                AND A.UPDATE_DATE = CONVERT(DATE, #{searchDateInput}  )
+                GROUP BY ITEM_CODE
+            ) PRL ON PRL.ITEM_CODE = IP.ITEM_CODE
+            INNER JOIN I_ITEM_MASTER_LIST IML
+            ON IP.ITEM_CODE = IML.ITEM_CODE
+            WHERE 1=1
+            AND IP.ITEM_TYPE_GSP = #{prodTypeGsp} -- ORDER BY PROD_PRIORITY
+            <if test="prodName !=null and prodName !=''">
+                AND IML.ITEM_NAME LIKE '%' + #{prodName} + '%'
+            </if>
+--             ORDER BY PROD_PRIORITY
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectDuolacList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+            SELECT priority
+            , MAX(itemCode) AS itemCode
+            , MAX(itemName) AS itemName
+            , SUM(oneTime) AS oneTime
+            , SUM(twoTime) AS twoTime
+            , SUM(threeTime) AS threeTime
+            , SUM(prodQtyReturn) AS prodQtyReturn
+            , SUM(prodQty) AS prodQty
+            , SUM(exmallQty) AS exmallQty
+            FROM (
+                SELECT    IP.ITEM_PRIORITY AS priority
+                        , IP.ITEM_CODE AS itemCode
+                        , IML.ITEM_NAME AS itemName
+                        , ISNULL(DR.ONE_TIME, 0) AS oneTime
+                        , ISNULL(DR.TWO_TIME, 0) AS twoTime
+                        , ISNULL(DR.THREE_TIME, 0) AS threeTime
+                        , ISNULL(DR.PROD_QTY_RETURN, 0) AS prodQtyReturn
+                        , ISNULL(DR.PROD_QTY, 0) AS prodQty
+                        , ISNULL(PRL.PROD_QTY, 0) AS exmallQty
+                FROM I_ITEM_PRIORITY IP
+                LEFT OUTER JOIN (
+                    SELECT B.ITEM_CODE, A.RELEASE_DATE, A.ONE_TIME, A.TWO_TIME, A.THREE_TIME, A.PROD_QTY, A.PROD_QTY_RETURN
+                    FROM I_DUOLAC_RELEASE A
+                    INNER JOIN I_ITEM_PROD_LIST B ON A.PROD_CODE = B.PROD_CODE
+                ) DR ON IP.ITEM_CODE = DR.ITEM_CODE AND DR.RELEASE_DATE = CONVERT(DATE, #{searchDateInput}  )
+                LEFT OUTER JOIN (
+                    SELECT B.ITEM_CODE, SUM(A.PROD_QTY) PROD_QTY
+                    FROM I_PROD_RELEASE_LIST A
+                    INNER JOIN I_ITEM_PROD_LIST B ON A.PROD_CODE = B.PROD_CODE
+                    WHERE 1=1
+                    AND A.UPDATE_DATE = CONVERT(DATE, #{searchDateInput}  )
+                    GROUP BY ITEM_CODE
+                ) PRL ON PRL.ITEM_CODE = IP.ITEM_CODE
+                INNER JOIN I_ITEM_MASTER_LIST IML
+                ON IP.ITEM_CODE = IML.ITEM_CODE
+                WHERE 1=1
+                AND IP.ITEM_TYPE_GSP = #{prodTypeGsp} -- ORDER BY PROD_PRIORITY
+            ) AA
+            GROUP BY ROLLUP(priority)
+        ) AAA
+        LEFT OUTER JOIN (
+            SELECT  CD_ITEM AS cdItem
+                    , ITEM_NAME AS itemName
+                    , ITEM_TYPE_GSP AS itemTypeGsp
+                    , ITEM_PRIORITY AS priority
+                    , YY_INV AS yyInv
+                    , QT_GOOD_INV AS qtGoodInv
+            from(
+                SELECT
+                    BBB.CD_ITEM,
+                    BBB.ITEM_NAME,
+                    max(BBB.ITEM_TYPE_GSP) ITEM_TYPE_GSP,
+                    max(BBB.ITEM_PRIORITY) ITEM_PRIORITY,
+                    BBB.YY_INV,
+                    SUM(BASIC_STOCK) AS QT_GOOD_INV
+                FROM (
+                    SELECT BB.CD_ITEM,
+                    X.ITEM_NAME,
+                    X.ITEM_TYPE_GSP,
+                    X.ITEM_PRIORITY,
+                    BB.YY_INV,
+                    BB.YM_IO,
+                    BB.QT_DELIVERY - BB.QT_DUOLAC - BB.QT_EXMALL BASIC_STOCK
+                    FROM (
+                        SELECT CD_ITEM
+                        ,LEFT(YM_STANDARD, 4) YY_INV
+                        ,LEFT(YM_STANDARD, 4) + '00' YM_IO
+                        ,QT_GOOD_INV QT_DELIVERY
+                        ,0 QT_DUOLAC
+                        ,0 QT_EXMALL
+                        FROM I_PROD_BASIC_STOCK
+                        WHERE 1=1
+                        AND YM_STANDARD = LEFT(#{searchDateNoDash}, 4)+'00'
+                        UNION ALL
+                        SELECT	a.CD_ITEM,
+                        a.YY_INV,
+                        a.YM_IO,
+                        SUM(a.QT_DELIVERY) QT_DELIVERY,
+                        SUM(a.QT_DUOLAC) QT_DUOLAC,
+                        SUM(a.QT_EXMALL) QT_EXMALL
+                        FROM I_PROD_INV a
+                        WHERE 1=1
+                        <![CDATA[
+                        AND YM_IO >=CONVERT(NCHAR(4), LEFT(#{searchDateNoDash}, 4)) + '01'
+                        AND YM_IO <= LEFT(#{searchDateNoDash}, 6)-1
+                        ]]>
+                        GROUP BY a.CD_ITEM, a.YY_INV,a.YM_IO
+
+                        UNION ALL
+
+                        SELECT  Z.cdItem CD_ITEM,
+                                Z.yyInv YY_INV,
+                                Z.ymIo YM_IO,
+                                SUM(Z.qtDelivery) QT_DELIVERY,
+                                SUM(Z.qtDuolac) QT_DUOLAC,
+                                SUM(Z.qtExmall) QT_EXMALL
+                        FROM
+                        (
+                            SELECT  'SFA' AS cdPlant,
+                            ITEM_CODE AS cdItem,
+                            LEFT(UPDATE_DATE,4) AS yyInv,
+                            REPLACE(UPDATE_DATE, '-', '') ymIo,
+                            0 AS qtDelivery,
+                            SUM(AAA) AS qtDuolac,
+                            SUM(BBB) AS qtExmall
+                            FROM (
+                                SELECT UPDATE_DATE,
+                                ITEM_CODE,
+                                CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+                                CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+                                CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+                                CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+                                FROM (
+                                    SELECT LEFT(RELEASE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, 'DUOLAC' AS MALL_CODE, DR.PROD_QTY, 'DUOLAC' AS MALL_SITE, DR.SALES_PRICE_SUM FROM I_DUOLAC_RELEASE DR
+                                    INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = DR.PROD_CODE
+                                    WHERE 1=1
+                                   <![CDATA[
+                                    AND  RELEASE_DATE >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}  , 6)) + '01'
+                                    AND RELEASE_DATE <= #{searchDateNoDash}
+                                   ]]>
+
+                                    UNION ALL
+
+                                    SELECT LEFT(UPDATE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, PRL.MALL_CODE, PRL.PROD_QTY, PRL.MALL_SITE, 0 AS SALES_PRICE_SUM  FROM I_PROD_RELEASE_LIST PRL
+                                    INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = PRL.PROD_CODE
+                                    WHERE 1=1
+                                   <![CDATA[
+                                    AND  UPDATE_DATE >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}  , 6)) + '01'
+                                    AND UPDATE_DATE <= #{searchDateNoDash}
+                                    AND PRL.MALL_SITE = 'EXMALL'
+                                   ]]>
+                                    ) A
+                                    GROUP BY UPDATE_DATE, ITEM_CODE, MALL_SITE
+                                ) AA
+                                GROUP BY UPDATE_DATE, ITEM_CODE
+
+                            UNION ALL
+
+                            SELECT 'DUZON' AS cdPlant
+                            , ITEM_CODE AS cdItem
+                            , LEFT(DT_SO,4) AS yyInv
+                            , DT_SO AS ymIo
+                            , SUM(QT_DELIVERY) qtDelivery
+                            , 0 qtDuolac
+                            , 0 qtExmall
+                            FROM (
+                                SELECT	LEFT(DT_SO, 6) DT_SO
+                                ,ITEM_CODE
+                                ,QT_DELIVERY
+                                FROM I_DUZON_DELIVERY_QT_LIST
+                                WHERE 1=1
+                              <![CDATA[
+                                AND  DT_SO >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}    , 6)) + '01'
+                                AND DT_SO <= #{searchDateNoDash}
+                             ]]>
+                            ) C
+                            GROUP BY DT_SO, ITEM_CODE
+                          ) Z
+                          GROUP BY  Z.cdItem,	Z.yyInv,Z.ymIo
+                    ) BB
+                    INNER JOIN (
+                    select IP.ITEM_CODE, IML.ITEM_NAME,  IP.ITEM_TYPE_GSP, IP.ITEM_PRIORITY
+                    from I_ITEM_PRIORITY IP
+                    LEFT OUTER JOIN I_ITEM_MASTER_LIST IML ON IP.ITEM_CODE = IML.ITEM_CODE
+                    WHERE 1=1
+                    AND IP.ITEM_TYPE_GSP = #{prodTypeGsp}
+                    --		ORDER BY PR.PROD_TYPE_GSP, PR.PROD_PRIORITY
+                    ) x ON BB.CD_ITEM = x.ITEM_CODE
+            ) BBB
+            group by BBB.CD_ITEM, BBB.ITEM_NAME, BBB.YY_INV
+            ) BBBB
+        ) XX ON AAA.itemCode = XX.cdItem        
+        WHERE 1=1
+        <if test="prodName !=null and prodName !=''">
+            AND AAA.itemName LIKE '%' + #{prodName} + '%'
+        </if>
+        ORDER BY AAA.priority
+    </select>
+
+    <select id="selectDuolacList2" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+            SELECT prodPriority
+            , MAX(itemCode) AS itemCode
+            , MAX(prorityProdCode) AS prorityProdCode
+            , MAX(prodName) AS prodName
+            , SUM(oneTime) AS oneTime
+            , SUM(twoTime) AS twoTime
+            , SUM(threeTime) AS threeTime
+            , SUM(prodQtyReturn) AS prodQtyReturn
+            , SUM(prodQty) AS prodQty
+            , SUM(exmallQty) AS exmallQty
+            FROM (
+                SELECT PP.PROD_PRIORITY AS prodPriority
+                , IPL.ITEM_CODE AS itemCode
+                , PP.PROD_CODE AS prorityProdCode
+                , PML.PROD_NAME AS prodName
+                , ISNULL(DR.ONE_TIME, 0) AS oneTime
+                , ISNULL(DR.TWO_TIME, 0) AS twoTime
+                , ISNULL(DR.THREE_TIME, 0) AS threeTime
+                , ISNULL(DR.PROD_QTY_RETURN, 0) AS prodQtyReturn
+                , ISNULL(DR.PROD_QTY, 0) AS prodQty
+                , ISNULL(PRL.PROD_QTY, 0) AS exmallQty
+                FROM I_PROD_PRIORITY PP
+                LEFT OUTER JOIN I_DUOLAC_RELEASE DR
+                ON PP.PROD_CODE = DR.PROD_CODE AND DR.RELEASE_DATE = CONVERT(DATE, #{searchDateInput})
+                LEFT OUTER JOIN ( SELECT PROD_CODE, SUM(PROD_QTY) PROD_QTY
+                FROM I_PROD_RELEASE_LIST
+                WHERE 1=1
+                AND UPDATE_DATE = CONVERT(DATE, #{searchDateInput})
+                GROUP BY PROD_CODE ) PRL
+                ON PRL.PROD_CODE = PP.PROD_CODE
+                INNER JOIN I_PROD_MASTER_LIST PML
+                ON PP.PROD_CODE = PML.PROD_CODE
+                INNER JOIN I_ITEM_PROD_LIST IPL
+                ON IPL.PROD_CODE = PP.PROD_CODE
+                WHERE 1=1
+                AND PP.PROD_TYPE_GSP = #{prodTypeGsp} -- ORDER BY PROD_PRIORITY
+            ) AA
+            GROUP BY ROLLUP(prodPriority)
+        ) AAA
+        LEFT OUTER JOIN (
+            SELECT  CD_ITEM AS cdItem
+                    , PROD_NAME AS prodName
+                    , PROD_TYPE_GSP AS prodTypeGsp
+                    , PROD_PRIORITY AS prodPriority
+                    , YY_INV AS yyInv
+                    , QT_GOOD_INV AS qtGoodInv
+            from(
+                SELECT
+                    BBB.CD_ITEM,
+                    BBB.PROD_NAME,
+                    max(BBB.PROD_TYPE_GSP) PROD_TYPE_GSP,
+                    max(BBB.PROD_PRIORITY) PROD_PRIORITY,
+                    BBB.YY_INV,
+                    SUM(BASIC_STOCK) AS QT_GOOD_INV
+                FROM (
+                    SELECT BB.CD_ITEM,
+                    X.PROD_NAME,
+                    X.PROD_TYPE_GSP,
+                    X.PROD_PRIORITY,
+                    BB.YY_INV,
+                    BB.YM_IO,
+                    BB.QT_DELIVERY - BB.QT_DUOLAC - BB.QT_EXMALL BASIC_STOCK
+                    FROM (
+                        SELECT CD_ITEM
+                        ,LEFT(YM_STANDARD, 4) YY_INV
+                        ,LEFT(YM_STANDARD, 4) + '00' YM_IO
+                        ,QT_GOOD_INV QT_DELIVERY
+                        ,0 QT_DUOLAC
+                        ,0 QT_EXMALL
+                        FROM I_PROD_BASIC_STOCK
+                        WHERE 1=1
+                        AND YM_STANDARD = LEFT(#{searchDateNoDash}, 4)+'00'
+                        UNION ALL
+                        SELECT	a.CD_ITEM,
+                        a.YY_INV,
+                        a.YM_IO,
+                        SUM(a.QT_DELIVERY) QT_DELIVERY,
+                        SUM(a.QT_DUOLAC) QT_DUOLAC,
+                        SUM(a.QT_EXMALL) QT_EXMALL
+                        FROM I_PROD_INV a
+                        WHERE 1=1
+                        <![CDATA[
+                        AND YM_IO >=CONVERT(NCHAR(4), LEFT(#{searchDateNoDash}, 4)) + '01'
+                        AND YM_IO <= LEFT(#{searchDateNoDash}, 6)-1
+                        ]]>
+                        GROUP BY a.CD_ITEM, a.YY_INV,a.YM_IO
+
+                        UNION ALL
+
+                        SELECT  Z.cdItem CD_ITEM,
+                                Z.yyInv YY_INV,
+                                Z.ymIo YM_IO,
+                                SUM(Z.qtDelivery) QT_DELIVERY,
+                                SUM(Z.qtDuolac) QT_DUOLAC,
+                                SUM(Z.qtExmall) QT_EXMALL
+                        FROM
+                        (
+                            SELECT  'SFA' AS cdPlant,
+                            ITEM_CODE AS cdItem,
+                            LEFT(UPDATE_DATE,4) AS yyInv,
+                            REPLACE(UPDATE_DATE, '-', '') ymIo,
+                            0 AS qtDelivery,
+                            SUM(AAA) AS qtDuolac,
+                            SUM(BBB) AS qtExmall
+                            FROM (
+                                SELECT UPDATE_DATE,
+                                ITEM_CODE,
+                                CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+                                CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+                                CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+                                CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+                                FROM (
+                                    SELECT LEFT(RELEASE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, 'DUOLAC' AS MALL_CODE, DR.PROD_QTY, 'DUOLAC' AS MALL_SITE, DR.SALES_PRICE_SUM FROM I_DUOLAC_RELEASE DR
+                                    INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = DR.PROD_CODE
+                                    WHERE 1=1
+                                   <![CDATA[
+                                    AND  RELEASE_DATE >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}  , 6)) + '01'
+                                    AND RELEASE_DATE <= #{searchDateNoDash}
+                                   ]]>
+
+                                    UNION ALL
+
+                                    SELECT LEFT(UPDATE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, PRL.MALL_CODE, PRL.PROD_QTY, PRL.MALL_SITE, 0 AS SALES_PRICE_SUM  FROM I_PROD_RELEASE_LIST PRL
+                                    INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = PRL.PROD_CODE
+                                    WHERE 1=1
+                                   <![CDATA[
+                                    AND  UPDATE_DATE >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}  , 6)) + '01'
+                                    AND UPDATE_DATE <= #{searchDateNoDash}
+                                    AND PRL.MALL_SITE = 'EXMALL'
+                                   ]]>
+                                    ) A
+                                    GROUP BY UPDATE_DATE, ITEM_CODE, MALL_SITE
+                                ) AA
+                                GROUP BY UPDATE_DATE, ITEM_CODE
+
+                            UNION ALL
+
+                            SELECT 'DUZON' AS cdPlant
+                            , ITEM_CODE AS cdItem
+                            , LEFT(DT_SO,4) AS yyInv
+                            , DT_SO AS ymIo
+                            , SUM(QT_DELIVERY) qtDelivery
+                            , 0 qtDuolac
+                            , 0 qtExmall
+                            FROM (
+                                SELECT	LEFT(DT_SO, 6) DT_SO
+                                ,ITEM_CODE
+                                ,QT_DELIVERY
+                                FROM I_DUZON_DELIVERY_QT_LIST
+                                WHERE 1=1
+                              <![CDATA[
+                                AND  DT_SO >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}    , 6)) + '01'
+                                AND DT_SO <= #{searchDateNoDash}
+                             ]]>
+                            ) C
+                            GROUP BY DT_SO, ITEM_CODE
+                          ) Z
+                          GROUP BY  Z.cdItem,	Z.yyInv,Z.ymIo
+                    ) BB
+                    INNER JOIN (
+                    select IPL.ITEM_CODE, PR.PROD_CODE, PML.PROD_NAME,  PR.PROD_TYPE_GSP, PR.PROD_PRIORITY
+                    from I_PROD_PRIORITY PR
+                    LEFT OUTER JOIN I_ITEM_PROD_LIST IPL ON PR.PROD_CODE = IPL.PROD_CODE
+                    LEFT OUTER JOIN I_PROD_MASTER_LIST PML ON PR.PROD_CODE = PML.PROD_CODE
+                    WHERE 1=1
+                    AND PR.PROD_TYPE_GSP = #{prodTypeGsp}
+                    --		ORDER BY PR.PROD_TYPE_GSP, PR.PROD_PRIORITY
+                    ) x ON BB.CD_ITEM = x.ITEM_CODE
+            ) BBB
+            group by BBB.CD_ITEM, BBB.PROD_NAME, BBB.YY_INV
+            ) BBBB
+        ) XX ON AAA.itemCode = XX.cdItem
+        WHERE 1=1
+        <if test="prodName !=null and prodName !=''">
+            AND AAA.prodName LIKE '%' + #{prodName} + '%'
+        </if>
+        ORDER BY AAA.prodPriority
+    </select>
+
+</mapper>

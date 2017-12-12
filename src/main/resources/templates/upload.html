@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container">
+
+    <div class="starter-template">
+        <h1>Spring Boot - Multiple file upload example - AJAX</h1>
+
+        <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
+            <input type="file" name="file"/><br/><br/>
+            <input type="submit" value="Submit" id="btnSubmit"/>
+        </form>
+
+        <h1>Ajax Post Result</h1>
+        <pre>
+            <span id="result"></span>
+        </pre>
+
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+</body>
+</html>

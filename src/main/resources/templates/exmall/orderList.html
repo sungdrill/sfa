@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+
+<div id="container"></div>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/exmall/orderList}">재고 - 외부몰리스트</a></h1>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+            <input type="hidden" name="pageNumber" id="pageNumber" />
+            <input type="hidden" name="callName" id="callName" value="getExmallOrderList" />
+            <div class="form-group">
+                <label for="orderNum">수주번호</label>
+                <input type="text" class="form-control" name="orderNum" id="orderNum" placeholder="수주번호" />
+            </div>
+            <div class="form-group">
+                <label for="accountCode">거래처코드</label>
+                <input type="text" class="form-control" name="accountCode" id="accountCode" placeholder="거래처코드" />
+            </div>
+            <div class="form-group">
+                <label for="accountName">거래처</label>
+                <input type="text" class="form-control" name="accountName" id="accountName" placeholder="거래처" />
+            </div>
+            <div class="form-group">
+                <label for="searchYearMonth2">수주일자</label>
+                <input type="text" class="form-control" name="searchYearMonth2" id="searchYearMonth2" placeholder="yyyy-mm" value="" />
+            </div>
+            <button type="button" class="btn pull-right btn-danger" onclick="getExmallOrderList()">검색</button>
+        </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <p class="text-left" id="total-count">
+            </p>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <button type="button" class="btn btn-primary" id="btnExcel" onclick="downloadExcel()" >엑셀다운로드</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+            <table class="table table-bordered table-hover table-fixed">
+                <thead>
+                <tr>
+                    <th class="text-center">순번</th>
+                    <th class="text-center">주문처</th>
+                    <th class="text-center">상품</th>
+                    <th class="text-center">수량</th>
+                </tr>
+                </thead>
+                <tbody id="exmallOrderListBody">
+                </tbody>
+            </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getExmallOrderList(1);
+</script>
+
+<script type="text/javascript">
+
+
+    Highcharts.chart('container', {
+
+        title: {
+            text: 'Solar Employment Growth by Sector, 2010-2016'
+        },
+
+        subtitle: {
+            text: 'Source: thesolarfoundation.com'
+        },
+
+        yAxis: {
+            title: {
+                text: 'Number of Employees'
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+        },
+
+        plotOptions: {
+            series: {
+                label: {
+                    connectorAllowed: false
+                },
+                pointStart: 2010
+            }
+        },
+
+        series: [{
+            name: 'Installation',
+            data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+        }, {
+            name: 'Manufacturing',
+            data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
+        }, {
+            name: 'Sales  Distribution',
+            data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
+        }, {
+            name: 'Project Development',
+            data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
+        }, {
+            name: 'Other',
+            data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
+        }],
+
+        responsive: {
+            rules: [{
+                condition: {
+                    maxWidth: 500
+                },
+                chartOptions: {
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    }
+                }
+            }]
+        }
+
+    });
+</script>
+
+</body>
+</html>

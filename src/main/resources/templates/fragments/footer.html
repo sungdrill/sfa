@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+</head>
+<body>
+<div class="navbar navbar-inverse navbar-fixed-bottom" th:fragment="footer">
+
+    <div class="container">
+
+        <footer>
+            <!-- this is footer -->
+            <!--© 2017 cellbiotech.com -->
+            <div class="center-block">
+                <div style="color: white;">Copyright © 2017 Cell Biotech. All rights reserved.</div>
+            </div>
+
+            <!--<span sec:authorize="isAuthenticated()">-->
+                <!--| Logged user: <span sec:authentication="name"></span> |-->
+                <!--Roles: <span sec:authentication="principal.authorities"></span> |-->
+                <!--<a th:href="@{/logout}">Sign Out</a>-->
+            <!--</span>-->
+
+            <script src="../../js/jquery.min.js?version=3.2.1" th:src="@{/js/jquery.min.js}"></script>
+            <script src="../../js/bootstrap.min.js?version=3.3.7" th:src="@{/js/bootstrap.min.js}"></script>
+            <script src="../../js/jquery.bootpag.min.js?version=1.0.7" th:src="@{/js/jquery.bootpag.min.js}"></script>
+            <script src="../../js/bootstrap-datepicker.js?version=1.6.4" th:src="@{/js/bootstrap-datepicker.js}"></script>
+            <script src="../../js/bootstrap-datepicker.kr.js?version=1.6.4" th:src="@{/js/bootstrap-datepicker.kr.js}"></script>
+            <script src="../../js/highcharts/highcharts.js?version=6.0.1" th:src="@{/js/highcharts/highcharts.js}"></script>
+            <script src="../../js/highcharts/highcharts-more.js?version=6.0.1" th:src="@{/js/highcharts/highcharts-more.js}"></script>
+            <script src="../../js/highcharts/highcharts-more.js?version=6.0.1" th:src="@{/js/highcharts/series-label.js}"></script>
+            <script src="../../js/highcharts/highcharts-more.js?version=6.0.1" th:src="@{/js/highcharts/data.js}"></script>
+            <script src="../../js/highcharts/exporting.js?version=6.0.1" th:src="@{/js/highcharts/exporting.js}"></script>
+            <!--<script src="../../js/tables/dataTables.bootstrap.min.js?version=3" th:src="@{/js/tables/dataTables.bootstrap.min.js}"></script>-->
+            <!--<script src="../../js/tables/jquery.dataTables.min.js?version=3" th:src="@{/js/tables/jquery.dataTables.min.js}"></script>-->
+            <script src="../../js/main.js" th:src="@{/js/main.js}"></script>
+            <script src="../../js/sfa.js" th:src="@{/js/sfa.js}"></script>
+            <script src="../../js/ima.js" th:src="@{/js/ima.js}"></script>
+            <script src="../../js/neoe.js" th:src="@{/js/neoe.js}"></script>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h3 id="modalMessage"></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

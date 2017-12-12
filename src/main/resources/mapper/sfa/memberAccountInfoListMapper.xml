@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.MemberAccountInfoListMapper">
+    <select id="selectMemberAccountInfoListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT  MAIML.ACCOUNT_CODE AS accountCode,
+                ISNULL(AIL.ACCOUNT_NAME, '입력무') AS accountName,
+                MAIML.SALES_MANAGER_CODE AS salesManagerCode,
+                ML.SALES_MANAGER_NAME AS salesManagerName,
+                isnull(CONVERT(VARCHAR(7),MANAGER_START_DATE, 120), '') AS managerStartDate,
+                isnull(CONVERT(VARCHAR(7),MANAGER_END_DATE, 120),'') AS managerEndDate,
+                MAIML.CREA_ID AS creaId,
+                CONVERT(VARCHAR(10),MAIML.CREA_DATE, 120) AS creaDate
+                FROM    G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                left outer join E_ACCOUNT_INFO_LIST AIL on MAIML.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                left outer join G_MEMBER_LIST ML on ML.SALES_MANAGER_CODE = MAIML.SALES_MANAGER_CODE
+        WHERE 1=1
+        <if test="searchSalesManagerName2 !=null and searchSalesManagerName2 !=''">
+            AND ML.SALES_MANAGER_NAME LIKE '%' + #{searchSalesManagerName2} + '%'
+        </if>
+        <if test="searchAccountCode !=null and searchAccountCode !=''">
+            AND MAIML.ACCOUNT_CODE LIKE '%' + #{searchAccountCode} + '%'
+        </if>
+        <if test="searchAccountName !=null and searchAccountName !=''">
+            AND AIL.ACCOUNT_NAME LIKE '%' + #{searchAccountName} + '%'
+        </if>
+        <if test="managerSearchStartYearMonth !=null and managerSearchStartYearMonth !=''">
+            AND MANAGER_START_DATE = #{managerSearchStartYearMonth}
+        </if>
+        <if test="managerSearchEndYearMonth !=null and managerSearchEndYearMonth !=''">
+            AND MANAGER_END_DATE = #{managerSearchEndYearMonth}
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+    <select id="selectMemberAccountInfoList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY MAIML.ACCOUNT_CODE ASC, MAIML.SALES_MANAGER_CODE ASC) num,
+            MAIML.ACCOUNT_CODE AS accountCode,
+            ISNULL(AIL.ACCOUNT_NAME, '엑셀입력-거래처정보에 있지 않음') AS accountName,
+            MAIML.SALES_MANAGER_CODE AS salesManagerCode,
+            ISNULL(ML.SALES_MANAGER_NAME, '엑셀입력-영업담당자리스트에 있지 않음') AS salesManagerName,
+            isnull(CONVERT(VARCHAR(7),MANAGER_START_DATE, 120), '') AS managerStartDate,
+            isnull(CONVERT(VARCHAR(7),MANAGER_END_DATE, 120),'') AS managerEndDate,
+            MAIML.CREA_ID AS creaId,
+            CONVERT(VARCHAR(10),MAIML.CREA_DATE, 120) AS creaDate
+            FROM    G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            left outer join E_ACCOUNT_INFO_LIST AIL on MAIML.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+            left outer join G_MEMBER_LIST ML on ML.SALES_MANAGER_CODE = MAIML.SALES_MANAGER_CODE
+        WHERE 1=1
+        <if test="searchSalesManagerName2 !=null and searchSalesManagerName2 !=''">
+            AND ML.SALES_MANAGER_NAME LIKE '%' + #{searchSalesManagerName2} + '%'
+        </if>
+        <if test="searchAccountCode !=null and searchAccountCode !=''">
+            AND MAIML.ACCOUNT_CODE LIKE '%' + #{searchAccountCode} + '%'
+        </if>
+        <if test="searchAccountName !=null and searchAccountName !=''">
+            AND AIL.ACCOUNT_NAME LIKE '%' + #{searchAccountName} + '%'
+        </if>
+        <if test="managerSearchStartYearMonth !=null and managerSearchStartYearMonth !=''">
+            AND MANAGER_START_DATE = #{managerSearchStartYearMonth}
+        </if>
+        <if test="managerSearchEndYearMonth !=null and managerSearchEndYearMonth !=''">
+            AND MANAGER_END_DATE = #{managerSearchEndYearMonth}
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+    
+    <insert id="insertMemberAccountInfo" parameterType="Map">
+        insert into G_MEMBER_ACCOUNT_INFO_MANAGER_LIST (
+                                                          ACCOUNT_CODE,
+                                                          SALES_MANAGER_CODE,
+        <if test="managerStartDate != null">
+                                                          MANAGER_START_DATE,
+        </if>
+        <if test="managerEndDate != null">
+                                                          MANAGER_END_DATE,
+        </if>
+                                                          CREA_DATE,
+                                                          CREA_ID)
+        VALUES (#{accountCode},
+        #{salesManagerCode},
+        <if test="managerStartDate != null">
+        #{managerStartDate},
+        </if>
+        <if test="managerEndDate != null">
+        #{managerEndDate},
+        </if>
+        #{creaDate},
+        #{creaId})
+    </insert>
+</mapper>

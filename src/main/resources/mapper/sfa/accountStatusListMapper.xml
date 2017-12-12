@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.AccountStatusListMapper">
+    <select id="selectAccountStatusList" parameterType="Map" resultType="Map">
+        <![CDATA[
+        select
+                ISNULL(NUM, 9999) AS num,
+                isnull(team_orders, 7777) as teamOrders,
+                isnull(MAX(TEAM_CD),'') as teamCd,
+                isnull(MAX(TEAM_NM),'') as teamNm,
+                isnull(MAX(AREA_CD),'') as areaCd,
+                isnull(MAX(AREA_NM),'') as areaNm,
+                MAX(ID) as id,
+                MAX(name) as name,
+                isnull(sum(cntTotal),0) as totalCnt,
+                isnull(sum(totalTotal),0) as totalTotal,
+                isnull(sum(cnt1),0) as aCnt,
+                isnull(sum(total1),0) as aTotal,
+                isnull(sum(cnt2),0) as bCnt,
+                isnull(sum(total2),0) as bTotal,
+                isnull(sum(cnt3),0) as cCnt,
+                isnull(sum(total3),0) as cTotal,
+                isnull(sum(cnt4),0) as dCnt,
+                isnull(sum(total4),0) as dTotal,
+                isnull(sum(cnt5),0) as eCnt,
+                isnull(sum(total5),0) as eTotal
+        from (
+                select
+                        ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                        aa.team_orders,
+                        aa.TEAM_CD,
+                        aa.TEAM_NM,
+                        aa.AREA_CD,
+                        aa.AREA_NM,
+                        aa.ID,
+                        aa.name,
+                        zz.cntTotal,
+                        zz.totalTotal,
+                        bb.cnt1,
+                        bb.total1,
+                        cc.cnt2,
+                        cc.total2,
+                        dd.cnt3,
+                        dd.total3,
+                        ee.cnt4,
+                        ee.total4,
+                        ff.cnt5,
+                        ff.total5
+                from (
+                        select
+                                TEAM_CODE AS team_cd,
+                                CL.CODE_NAME AS team_nm,
+                                CL.SORT AS TEAM_ORDERs,
+                                AREA_CODE as area_cd,
+                                area.CODE_NAME as area_nm,
+                                area.SORT as AREA_ORDERS,
+                                Rank_code as rank_cd,
+                                rankk.CODE_NAME AS RANK_NM,
+                                rankk.SORT as posi_orders,
+                                SALES_MANAGER_CODE as id,
+                                SALES_MANAGER_NAME AS name
+                        from G_MEMBER_LIST ML
+                        left outer  join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+                        left outer  join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+                        left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE
+                ) aa
+                left outer join
+                (
+                    select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cntTotal , SUM(aa.sum1) as totalTotal
+                    from (
+                        select MAIML.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                        from
+                        (select ACCOUNT_CODE, SALES_MANAGER_CODE
+                        from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST
+                        where 1=1
+                        and MANAGER_START_DATE = #{startSearchDate}) MAIML
+                        left outer join (
+                        select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                        from  E_SALES_DEADLINE_LIST
+                        where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE
+                        ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                    ) aa
+                    where 1=1
+                    --and aa.SALES_MANAGER_CODE = 'SR120501'
+                    group by aa.SALES_MANAGER_CODE
+                ) zz on zz.SALES_MANAGER_CODE = aa.id
+                left outer join
+                (
+                    select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt1 , SUM(aa.sum1) as total1
+                    from (
+                    select MAIML.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from
+                    (select ACCOUNT_CODE, SALES_MANAGER_CODE
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST
+                    where 1=1
+                    and MANAGER_START_DATE = #{startSearchDate}) MAIML
+                    join (
+                    select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                    from  E_SALES_DEADLINE_LIST
+                    where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by ACCOUNT_CODE
+                    ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                    and temp.sum1 >= 1000000
+                    ) aa
+                    where 1=1
+                    --and aa.SALES_MANAGER_CODE = 'SR120501'
+                    group by aa.SALES_MANAGER_CODE
+                ) bb on bb.SALES_MANAGER_CODE = aa.id
+                left outer join
+                (
+                    select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt2 , SUM(aa.sum1) as total2
+                    from (
+                    select MAIML.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from
+                    (select ACCOUNT_CODE, SALES_MANAGER_CODE
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST
+                    where 1=1
+                    and MANAGER_START_DATE = #{startSearchDate}) MAIML
+                    join (
+                    select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                    from  E_SALES_DEADLINE_LIST
+                    where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by ACCOUNT_CODE
+                    ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                    and temp.sum1 < 1000000 and temp.sum1 >= 500000
+                    ) aa
+                    where 1=1
+                    --and aa.SALES_MANAGER_CODE = 'SR120501'
+                    group by aa.SALES_MANAGER_CODE
+                ) cc on cc.SALES_MANAGER_CODE = aa.id
+                left outer join
+                (
+                    select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt3 , SUM(aa.sum1) as total3
+                    from (
+                    select MAIML.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from
+                    (select ACCOUNT_CODE, SALES_MANAGER_CODE
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST
+                    where 1=1
+                    and MANAGER_START_DATE = #{startSearchDate}) MAIML
+                    join (
+                    select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                    from  E_SALES_DEADLINE_LIST
+                    where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by ACCOUNT_CODE
+                    ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                    and temp.sum1 < 500000 and temp.sum1 >= 200000
+                    ) aa
+                    where 1=1
+                    --and aa.SALES_MANAGER_CODE = 'SR120501'
+                    group by aa.SALES_MANAGER_CODE
+                ) dd on dd.SALES_MANAGER_CODE = aa.id
+                left outer join
+                (
+                    select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt4 , SUM(aa.sum1) as total4
+                    from (
+                    select MAIML.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from
+                    (select ACCOUNT_CODE, SALES_MANAGER_CODE
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST
+                    where 1=1
+                    and MANAGER_START_DATE = #{startSearchDate}) MAIML
+                    join (
+                    select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                    from  E_SALES_DEADLINE_LIST
+                    where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by ACCOUNT_CODE
+                    ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                    and temp.sum1 < 200000 and temp.sum1 > 0
+                    ) aa
+                    where 1=1
+                    --and aa.SALES_MANAGER_CODE = 'SR120501'
+                    group by aa.SALES_MANAGER_CODE
+                ) ee on ee.SALES_MANAGER_CODE = aa.id
+                left outer join
+                (
+                    select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt5 , SUM(aa.sum1) as total5
+                    from (
+                    select MAIML.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , isnull(temp.sum1,0) as sum1
+                    from
+                    (select ACCOUNT_CODE, SALES_MANAGER_CODE
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST
+                    where 1=1
+                    and MANAGER_START_DATE = #{startSearchDate}) MAIML
+                    left outer join
+                    (
+                    select ACCOUNT_CODE, isnull(sum(AMOUNT),0)  as sum1
+                    from  E_SALES_DEADLINE_LIST
+                    where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by ACCOUNT_CODE
+                    ) temp on MAIML.ACCOUNT_CODE = temp.ACCOUNT_CODE
+                    ) aa
+                    where 1=1
+                    and aa.sum1 <= 0
+                    --and aa.SALES_MANAGER_CODE = 'SR120501'
+                    group by aa.SALES_MANAGER_CODE
+                ) ff on ff.SALES_MANAGER_CODE = aa.id
+        ) XX
+        -- where 1=1
+        GROUP BY ROLLUP(TEAM_ORDERS, num)
+        ]]>
+    </select>
+
+    <select id="selectAccountStatusList2" parameterType="Map" resultType="Map">
+        select
+                    ISNULL(NUM, 9999) AS num,
+                    isnull(team_orders, 7777) as teamOrders,
+                    isnull(MAX(TEAM_CD),'') as teamCd,
+                    isnull(MAX(TEAM_NM),'') as teamNm,
+                    isnull(MAX(AREA_CD),'') as areaCd,
+                    isnull(MAX(AREA_NM),'') as areaNm,
+                    MAX(ID) as id,
+                    MAX(name) as name,
+                    isnull(sum(cntTotal),0) as totalCnt,
+                    isnull(sum(totalTotal),0) as totalTotal,
+                    isnull(sum(cnt1),0) as aCnt,
+                    isnull(sum(total1),0) as aTotal,
+                    isnull(sum(cnt2),0) as bCnt,
+                    isnull(sum(total2),0) as bTotal,
+                    isnull(sum(cnt3),0) as cCnt,
+                    isnull(sum(total3),0) as cTotal,
+                    isnull(sum(cnt4),0) as dCnt,
+                    isnull(sum(total4),0) as dTotal,
+                    isnull(sum(cnt5),0) as eCnt,
+                    isnull(sum(total5),0) as eTotal
+        from (
+            select
+                    ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                    aa.team_orders,
+                    aa.TEAM_CD,
+                    aa.TEAM_NM,
+                    aa.AREA_CD,
+                    aa.AREA_NM,
+                    aa.ID,
+                    aa.name,
+                    zz.cntTotal,
+                    zz.totalTotal,
+                    bb.cnt1,
+                    bb.total1,
+                    cc.cnt2,
+                    cc.total2,
+                    dd.cnt3,
+                    dd.total3,
+                    ee.cnt4,
+                    ee.total4,
+                    ff.cnt5,
+                    ff.total5
+            from (
+                    select
+                            TEAM_CODE AS team_cd,
+                            CL.CODE_NAME AS team_nm,
+                            CL.SORT AS TEAM_ORDERs,
+                            AREA_CODE as area_cd,
+                            area.CODE_NAME as area_nm,
+                            area.SORT as AREA_ORDERS,
+                            Rank_code as rank_cd,
+                            rankk.CODE_NAME AS RANK_NM,
+                            rankk.SORT as posi_orders,
+                            SALES_MANAGER_CODE as id,
+                            SALES_MANAGER_NAME AS name
+                        from G_MEMBER_LIST ML
+                        left outer  join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+                        left outer  join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+                        left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE
+            ) aa
+            left outer join
+            (
+                select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cntTotal , SUM(aa.sum1) as totalTotal
+                from (
+                select AGL.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                join G_ACCOUNT_GRADE_LIST AGL on MAIML.ACCOUNT_CODE = AGL.ACCOUNT_CODE
+                and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                left outer join (
+                    select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                    from  E_SALES_DEADLINE_LIST
+                    where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by ACCOUNT_CODE
+                    ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                ) aa
+                where 1=1
+                --and aa.SALES_MANAGER_CODE = 'SR120501'
+                group by aa.SALES_MANAGER_CODE
+            ) zz on zz.SALES_MANAGER_CODE = aa.id
+            left outer join
+            (
+              select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt1 , SUM(aa.sum1) as total1
+                from (
+                    select AGL.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    join G_ACCOUNT_GRADE_LIST AGL on MAIML.ACCOUNT_CODE = AGL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    and AGL.GRADE_CODE = 'G001'
+                    left outer join (
+                        select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                        from  E_SALES_DEADLINE_LIST
+                        where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE
+                        ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                ) aa
+                where 1=1
+                --and aa.SALES_MANAGER_CODE = 'SR120501'
+                group by aa.SALES_MANAGER_CODE
+            ) bb on bb.SALES_MANAGER_CODE = aa.id
+            left outer join
+            (
+                select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt2 , SUM(aa.sum1) as total2
+                from (
+                    select AGL.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    join G_ACCOUNT_GRADE_LIST AGL on MAIML.ACCOUNT_CODE = AGL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    and AGL.GRADE_CODE = 'G002'
+                    left outer join (
+                        select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                        from  E_SALES_DEADLINE_LIST
+                        where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE
+                        ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                ) aa
+                where 1=1
+                --and aa.SALES_MANAGER_CODE = 'SR120501'
+                group by aa.SALES_MANAGER_CODE
+            ) cc on cc.SALES_MANAGER_CODE = aa.id
+            left outer join
+            (
+                select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt3 , SUM(aa.sum1) as total3
+                from (
+                    select AGL.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    join G_ACCOUNT_GRADE_LIST AGL on MAIML.ACCOUNT_CODE = AGL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    and AGL.GRADE_CODE = 'G003'
+                    left outer join (
+                        select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                        from  E_SALES_DEADLINE_LIST
+                        where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE
+                        ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                ) aa
+                where 1=1
+                --and aa.SALES_MANAGER_CODE = 'SR120501'
+                group by aa.SALES_MANAGER_CODE
+            ) dd on dd.SALES_MANAGER_CODE = aa.id
+            left outer join
+            (
+                select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt4 , SUM(aa.sum1) as total4
+                from (
+                    select AGL.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    join G_ACCOUNT_GRADE_LIST AGL on MAIML.ACCOUNT_CODE = AGL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    and AGL.GRADE_CODE = 'G004'
+                    left outer join (
+                        select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                        from  E_SALES_DEADLINE_LIST
+                        where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE
+                        ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                ) aa
+                where 1=1
+                --and aa.SALES_MANAGER_CODE = 'SR120501'
+                group by aa.SALES_MANAGER_CODE
+            ) ee on ee.SALES_MANAGER_CODE = aa.id
+            left outer join
+            (
+                select aa.SALES_MANAGER_CODE, COUNT(aa.ACCOUNT_CODE) as cnt5 , SUM(aa.sum1) as total5
+                from (
+                    select AGL.ACCOUNT_CODE, MAIML.SALES_MANAGER_CODE , temp.sum1
+                    from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    join G_ACCOUNT_GRADE_LIST AGL on MAIML.ACCOUNT_CODE = AGL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    and AGL.GRADE_CODE = 'G005'
+                    left outer join (
+                        select ACCOUNT_CODE, sum(AMOUNT)  as sum1
+                        from  E_SALES_DEADLINE_LIST
+                        where 1=1 and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE
+                        ) temp on temp.ACCOUNT_CODE = MAIML.ACCOUNT_CODE
+                ) aa
+                where 1=1
+                --and aa.SALES_MANAGER_CODE = 'SR120501'
+                group by aa.SALES_MANAGER_CODE
+            ) ff on ff.SALES_MANAGER_CODE = aa.id
+        ) XX
+        -- where 1=1
+        <!--<if test="salesManagerName !=null and salesManagerName !=''">-->
+          <!--AND ID LIKE '%' + #{salesManagerName} + '%'-->
+        <!--</if>-->
+        GROUP BY ROLLUP(TEAM_ORDERS, num)
+    </select>
+</mapper>

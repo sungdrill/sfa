@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.neoe.PartnerMapper">
+    <select id="selectPartnerListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT ROW_NUMBER() OVER (ORDER BY cd_partner ASC) NUM,
+        CD_PARTNER,
+        LN_PARTNER,
+        DT_OPEN,
+        AM_CAP,
+        MANU_EMP,
+        MANA_EMP,
+        SD_PARTNER,
+        USE_YN,
+        LT_TRANS,
+        SN_PARTNER,
+        EN_PARTNER,
+        TP_PARTNER,
+        FG_PARTNER
+        FROM NEOE.MA_Partner
+        WHERE 1=1
+        and cd_company = '1000'
+        <!--<if test="itemCode !=null and itemCode !=''">-->
+        <!--AND IML.ITEM_CODE LIKE '%' + #{itemCode} + '%'-->
+        <!--</if>-->
+        <!--<if test="itemName !=null and itemName !=''">-->
+        <!--AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'-->
+        <!--</if>-->
+        <!--<if test="searchMappingDate !=null and searchMappingDate !=''">-->
+        <!--AND IIIHL.UPDATE_DATE = #{searchMappingDate}-->
+        <!--</if>-->
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectPartnerList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT ROW_NUMBER() OVER (ORDER BY cd_partner ASC) NUM,
+        CD_PARTNER,
+        LN_PARTNER,
+        DT_OPEN,
+        AM_CAP,
+        MANU_EMP,
+        MANA_EMP,
+        SD_PARTNER,
+        USE_YN,
+        LT_TRANS,
+        SN_PARTNER,
+        EN_PARTNER,
+        TP_PARTNER,
+        FG_PARTNER
+        FROM NEOE.MA_Partner
+        WHERE 1=1
+        AND cd_company = '1000'
+        <!--<if test="itemCode !=null and itemCode !=''">-->
+            <!--AND IML.ITEM_CODE LIKE '%' + #{itemCode} + '%'-->
+        <!--</if>-->
+        <!--<if test="itemName !=null and itemName !=''">-->
+            <!--AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'-->
+        <!--</if>-->
+        <!--<if test="searchMappingDate !=null and searchMappingDate !=''">-->
+            <!--AND IIIHL.UPDATE_DATE = #{searchMappingDate}-->
+        <!--</if>-->
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

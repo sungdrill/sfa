@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.CpList2Mapper">
+    <select id="selectCpList2" parameterType="Map" resultType="Map">
+        SELECT
+            ISNULL(NUM, 9999) AS num,
+            isnull(team_orders, 7777) as teamOrders,
+            isnull(MAX(TEAM_CD),'') as teamCd,
+            isnull(MAX(TEAM_NM),'') as teamNm,
+            isnull(MAX(AREA_CD),'') as areaCd,
+            isnull(MAX(AREA_NM),'') as areaNm,
+            MAX(ID) as id,
+            MAX(name) as name,
+            SUM(goal) as goal,
+            SUM(orderAmount) as orderAmount,
+            SUM(deliveryRequestAmount) as deliveryRequestAmount,
+            SUM(sealesDeadlineAmount) as sealesDeadlineAmount,
+            ROUND(AVG(goalRate),0) as goalRate,
+            SUM(remainingGoal) as remainingGoal,
+            SUM(collectionAmount) as collectionAmount,
+            SUM(collectionAmountGoal) as collectionAmountGoal,
+            ROUND(AVG(collectionAmountRate),0) as collectionAmountRate,
+            SUM(godomallCnt) as godomallCnt,
+            SUM(godomallAmount) as godomallAmount
+        FROM
+        (
+        select  ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                aa.TEAM_ORDERS,
+                aa.TEAM_CD ,
+                aa.TEAM_NM,
+                aa.AREA_CD,
+                aa.AREA_NM,
+                aa.ID,
+                aa.NAME,
+        <choose>
+            <when test="goalMonth eq '01'.toString()">
+                isnull(ee.GOAL1, 0) AS goal
+            </when>
+            <when test="goalMonth eq '02'.toString()">
+                isnull(ee.GOAL2, 0) AS goal
+            </when>
+            <when test="goalMonth eq '03'.toString()">
+                isnull(ee.GOAL3, 0) AS goal
+            </when>
+            <when test="goalMonth eq '04'.toString()">
+                isnull(ee.GOAL4, 0) AS goal
+            </when>
+            <when test="goalMonth eq '05'.toString()">
+                isnull(ee.GOAL5, 0) AS goal
+            </when>
+            <when test="goalMonth eq '06'.toString()">
+                isnull(ee.GOAL6, 0) AS goal
+            </when>
+            <when test="goalMonth eq '07'.toString()">
+                isnull(ee.GOAL7, 0) AS goal
+            </when>
+            <when test="goalMonth eq '08'.toString()">
+                isnull(ee.GOAL8, 0) AS goal
+            </when>
+            <when test="goalMonth eq '09'.toString()">
+                isnull(ee.GOAL9, 0) AS goal
+            </when>
+            <when test="goalMonth eq '10'.toString()">
+                isnull(ee.GOAL10, 0) AS goal
+            </when>
+            <when test="goalMonth eq '11'.toString()">
+                isnull(ee.GOAL11, 0) AS goal
+            </when>
+            <when test="goalMonth eq '12'.toString()">
+                isnull(ee.GOAL12, 0) AS goal
+            </when>
+            <otherwise>
+                0 AS goal
+            </otherwise>
+        </choose>,
+        <choose>
+            <when test="goalMonth eq '01'.toString()">
+                case when ISNULL(EE.GOAL1, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL1, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '02'.toString()">
+                case when ISNULL(EE.GOAL2, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL2, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '03'.toString()">
+                case when ISNULL(EE.GOAL3, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL3, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '04'.toString()">
+                case when ISNULL(EE.GOAL4, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL4, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '05'.toString()">
+                case when ISNULL(EE.GOAL5, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL5, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '06'.toString()">
+                case when ISNULL(EE.GOAL6, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL6, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '07'.toString()">
+                case when ISNULL(EE.GOAL7, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL7, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '08'.toString()">
+                case when ISNULL(EE.GOAL8, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL8, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '09'.toString()">
+                case when ISNULL(EE.GOAL9, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL9, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '10'.toString()">
+                case when ISNULL(EE.GOAL10, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL10, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '11'.toString()">
+                case when ISNULL(EE.GOAL11, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL11, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <when test="goalMonth eq '12'.toString()">
+                case when ISNULL(EE.GOAL12, 0) &lt;&gt; 0 and (isnull(bb.amount,0)+isnull(cc.amount,0)) &lt;&gt; 0  then ROUND((isnull(bb.amount,0)+isnull(cc.amount,0)) / ISNULL(EE.GOAL12, 0) * 100, 0) else 0 end AS goalRate
+            </when>
+            <otherwise>
+                0 AS goalRate
+            </otherwise>
+        </choose>,
+        <choose>
+            <when test="goalMonth eq '01'.toString()">
+                isnull(ee.GOAL1, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '02'.toString()">
+                isnull(ee.GOAL2, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '03'.toString()">
+                isnull(ee.GOAL3, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '04'.toString()">
+                isnull(ee.GOAL4, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '05'.toString()">
+                isnull(ee.GOAL5, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '06'.toString()">
+                isnull(ee.GOAL6, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '07'.toString()">
+                isnull(ee.GOAL7, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '08'.toString()">
+                isnull(ee.GOAL8, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '09'.toString()">
+                isnull(ee.GOAL9, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '10'.toString()">
+                isnull(ee.GOAL10, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '11'.toString()">
+                isnull(ee.GOAL11, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <when test="goalMonth eq '12'.toString()">
+                isnull(ee.GOAL12, 0) - (isnull(bb.amount,0)+isnull(cc.amount,0)) AS remainingGoal
+            </when>
+            <otherwise>
+                0 AS remainingGoal
+            </otherwise>
+        </choose>,
+                ISNULL(bb.amount,0) as orderAmount,
+                ISNULL(cc.amount,0) as deliveryRequestAmount,
+                (ISNULL(bb.amount,0)+ISNULL(cc.amount,0)) as sealesDeadlineAmount,
+                ISNULL(dd.amount,0) as collectionAmount,
+                ISNULL(ff.amount,0) as collectionAmountGoal,
+                case when ISNULL(dd.amount,0) &lt;&gt; 0 and isnull(ff.amount,0) &lt;&gt; 0  then ROUND(isnull(dd.amount,0) / ISNULL(ff.amount,0) * 100, 0) else 0 end AS collectionAmountRate,
+                isnull(gg.cnt,0) as godomallCnt,
+                isnull(gg.amount,0) as godomallAmount
+        FROM (
+            select TEAM_CODE AS team_cd, CL.CODE_NAME AS team_nm, CL.SORT AS TEAM_ORDERs, AREA_CODE as area_cd, area.CODE_NAME as area_nm,
+            area.SORT as AREA_ORDERS, Rank_code as rank_cd, rankk.CODE_NAME AS RANK_NM, rankk.SORT as posi_orders,  SALES_MANAGER_CODE as id, SALES_MANAGER_NAME AS name
+            from G_MEMBER_LIST ML
+            left outer join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+            left outer join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+            left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE
+        ) aa
+        left outer JOIN (
+            SELECT  SALES_MANAGER_CODE,
+                    GOAL1,
+                    GOAL2,
+                    GOAL3,
+                    GOAL4,
+                    GOAL5,
+                    GOAL6,
+                    GOAL7,
+                    GOAL8,
+                    GOAL9,
+                    GOAL10,
+                    GOAL11,
+                    GOAL12
+            FROM B_SALES_MANAGER_GOAL
+            WHERE goal_date = #{searchYear}
+        )ee ON aa.id = ee.SALES_MANAGER_CODE
+        left outer JOIN (
+            SELECT olol.SALES_MANAGER_CODE, SUM(amount) as amount
+            FROM E_ORDER_LIST ol
+            left outer join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST olol
+            on olol.ACCOUNT_CODE = ol.ACCOUNT_CODE
+            and olol.MANAGER_START_DATE = #{startSearchDate}
+            and ol.ORDER_DATE BETWEEN #{startSearchDate} AND #{endSearchDate}
+            GROUP BY olol.SALES_MANAGER_CODE
+        ) bb on aa.id = bb.SALES_MANAGER_CODE
+        left outer JOIN (
+            SELECT erlerl.SALES_MANAGER_CODE , SUM(erl.amount) as amount, SUM(erl.REQUEST_QTY) AS qty1, SUM(erl.SHIPPING_QTY) as qty2, SUM(erl.NOT_SHIPPING_QTY)as qty3
+            from E_DELIVERY_REQUEST_LIST erl
+            join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST erlerl on erl.ACCOUNT_CODE = erlerl.ACCOUNT_CODE
+            and erlerl.MANAGER_START_DATE = #{startSearchDate}
+            and erl.REQUEST_DATE BETWEEN #{startSearchDate} AND #{endSearchDate}
+            group by erlerl.SALES_MANAGER_CODE
+        ) cc on aa.id = cc.SALES_MANAGER_CODE
+        left outer JOIN (
+            SELECT clcl.SALES_MANAGER_CODE, SUM(COLLECTION_AMOUNT) as amount
+            FROM E_COLLECTION_LIST cl
+            join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST clcl on cl.COLLECTION_PLACE_CODE = clcl.ACCOUNT_CODE
+            and clcl.MANAGER_START_DATE = #{startSearchDate}
+            and  cl.COLLECTION_DATE BETWEEN #{startSearchDate} AND #{endSearchDate}
+            GROUP BY clcl.SALES_MANAGER_CODE
+        ) dd on aa.ID = dd.SALES_MANAGER_CODE
+        left outer JOIN (
+            SELECT clcl.SALES_MANAGER_CODE, SUM(COLLECTION_AMOUNT)*1.1 as amount
+            FROM E_COLLECTION_LIST cl
+            join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST clcl on cl.COLLECTION_PLACE_CODE = clcl.ACCOUNT_CODE
+            and clcl.MANAGER_START_DATE = dateadd(mm,-3, #{startSearchDate})
+            and  cl.COLLECTION_DATE BETWEEN dateadd(mm,-3, #{startSearchDate}) AND dateadd(mm,-3, #{endSearchDate})
+            GROUP BY clcl.SALES_MANAGER_CODE
+        ) ff on aa.ID = ff.SALES_MANAGER_CODE
+        left outer JOIN (
+            SELECT clcl.SALES_MANAGER_CODE,  COUNT(agl.ACCOUNT_CODE) as cnt, SUM(COLLECTION_AMOUNT) as amount
+            FROM E_COLLECTION_LIST cl
+            join G_ACCOUNT_GRADE_LIST agl on cl.COLLECTION_PLACE_CODE = agl.ACCOUNT_CODE
+            and agl.GODOMOLL_YN = '전문가몰'
+            join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST clcl on cl.COLLECTION_PLACE_CODE = clcl.ACCOUNT_CODE
+            and clcl.MANAGER_START_DATE = #{startSearchDate}
+            and  cl.COLLECTION_DATE BETWEEN #{startSearchDate} AND #{endSearchDate}
+            GROUP BY clcl.SALES_MANAGER_CODE
+        ) gg on aa.ID = gg.SALES_MANAGER_CODE
+        )XX
+        GROUP BY ROLLUP(TEAM_ORDERS, num)
+    </select>
+</mapper>

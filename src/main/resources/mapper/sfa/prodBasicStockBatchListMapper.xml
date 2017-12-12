@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ProdBasicStockBatchListMapper">
+    <select id="selectProdBasicStockBatchList" parameterType="Map" resultType="Map">
+        SELECT  CD_ITEM AS cdItem
+                , 'BATCH' AS cdPlant
+                , CONVERT(nchar(4), YY_INV+1) + '00' AS ymStandard
+                , QT_GOOD_INV AS qtGoodInv
+        from(
+            SELECT  AAA.CD_ITEM,
+                    AAA.PROD_NAME,
+                    max(AAA.PROD_TYPE_GSP) PROD_TYPE_GSP,
+                    max(AAA.PROD_PRIORITY) PROD_PRIORITY,
+                    AAA.YY_INV,
+                    SUM(BASIC_STOCK) AS QT_GOOD_INV
+            FROM (
+                SELECT  AA.CD_ITEM,
+                        X.PROD_NAME,
+                        X.PROD_TYPE_GSP,
+                        X.PROD_PRIORITY,
+                        AA.YY_INV,
+                        AA.YM_IO,
+                        AA.QT_DELIVERY - AA.QT_DUOLAC - AA.QT_EXMALL BASIC_STOCK
+                FROM (
+                    SELECT  CD_ITEM
+                            ,LEFT(YM_STANDARD, 4) YY_INV
+                            ,LEFT(YM_STANDARD, 4) + '00' YM_IO
+                            ,QT_GOOD_INV QT_DELIVERY
+                            ,0 QT_DUOLAC
+                            ,0 QT_EXMALL
+                    FROM I_PROD_BASIC_STOCK
+                    WHERE 1=1
+                    AND YM_STANDARD = LEFT(#{regDate}, 4)+'00'
+                    UNION ALL
+                    SELECT	a.CD_ITEM,
+                            a.YY_INV,
+                            a.YM_IO,
+                            SUM(a.QT_DELIVERY) QT_DELIVERY,
+                            SUM(a.QT_DUOLAC) QT_DUOLAC,
+                            SUM(a.QT_EXMALL) QT_EXMALL
+                    FROM I_PROD_INV a
+                    WHERE 1=1
+                    <![CDATA[
+                    AND YM_IO >=CONVERT(NCHAR(4), LEFT(#{regDate}, 4)) + '01'
+                    AND YM_IO <= LEFT(#{regDate}, 6)
+                    ]]>
+                    GROUP BY a.CD_ITEM, a.YY_INV,a.YM_IO
+                ) AA
+                INNER JOIN (
+                SELECT IPL.ITEM_CODE, PR.PROD_CODE, PML.PROD_NAME,  PR.PROD_TYPE_GSP, PR.PROD_PRIORITY
+                FROM I_PROD_PRIORITY PR
+                LEFT OUTER JOIN I_ITEM_PROD_LIST IPL ON PR.PROD_CODE = IPL.PROD_CODE
+                LEFT OUTER JOIN I_PROD_MASTER_LIST PML ON PR.PROD_CODE = PML.PROD_CODE
+                WHERE 1=1
+                ) x ON AA.CD_ITEM = x.ITEM_CODE
+            ) AAA
+            GROUP BY AAA.CD_ITEM, AAA.PROD_NAME, AAA.YY_INV
+        ) AAAA
+        ORDER BY AAAA.PROD_TYPE_GSP,AAAA.PROD_PRIORITY
+    </select>
+
+    <select id="selectProdBasicStockBatchList2" parameterType="Map" resultType="Map">
+        SELECT  CD_ITEM AS cdItem,
+                'SFA' AS cdPlant,
+                CONVERT(NCHAR(4), LEFT(#{regDate}, 4) + 1) + '00' AS ymStandard,
+                SUM(QT_GOOD_INV) AS qtGoodInv
+        FROM (
+            SELECT
+            IPL.ITEM_CODE AS CD_ITEM,
+            PBS.YM_STANDARD AS YM_STANDARD,
+            QT_GOOD_INV
+            FROM I_PROD_BASIC_STOCK PBS LEFT OUTER JOIN I_ITEM_PROD_LIST IPL
+            ON PBS.CD_ITEM = IPL.PROD_CODE
+            WHERE 1=1
+            AND PBS.YM_STANDARD = CONVERT(NCHAR(4), LEFT(#{regDate}, 4)) + '00'
+
+            UNION ALL
+
+            SELECT	AAA.CD_ITEM
+            ,AAA.YY_INV + '00' AS YM_STANDARD
+            ,SUM(BASIC_STOCK) AS QT_GOOD_INV
+            FROM
+            (
+            SELECT AA.CD_ITEM,
+            AA.YY_INV,
+            AA.YM_IO, AA.QT_DELIVERY, AA.QT_DUOLAC, AA.QT_EXMALL,
+            AA.QT_DELIVERY - AA.QT_DUOLAC - AA.QT_EXMALL BASIC_STOCK
+            FROM (
+
+            SELECT	a.CD_ITEM,
+            a.YY_INV,
+            a.YM_IO,
+            SUM(a.QT_DELIVERY) QT_DELIVERY,
+            SUM(a.QT_DUOLAC) QT_DUOLAC,
+            SUM(a.QT_EXMALL) QT_EXMALL
+            FROM I_PROD_INV a
+            GROUP BY a.CD_ITEM,a.YY_INV,a.YM_IO
+            ) AA
+            WHERE 1=1
+        <![CDATA[
+            AND YM_IO >=CONVERT(NCHAR(4), LEFT(#{regDate}, 4) ) + '01'
+            AND YM_IO <= LEFT(#{regDate}, 6)
+        ]]>
+            ) AAA
+            GROUP BY AAA.CD_ITEM,AAA.YY_INV
+        ) X
+        GROUP BY CD_ITEM
+    </select>
+
+</mapper>

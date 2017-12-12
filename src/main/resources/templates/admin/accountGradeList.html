@@ -1,0 +1,274 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/accountGradeList}">거래처별 등급 관리</a></h1>
+        </div>
+    </div>
+
+    <span id="more" style="cursor: pointer;" onclick="if(story.style.display=='none') {story.style.display='';$('#aaa').attr('class', 'glyphicon glyphicon-minus');} else {story.style.display='none';$('#aaa').attr('class', 'glyphicon glyphicon-plus');}"><span id="aaa" class="glyphicon glyphicon-plus" aria-hidden="true">엑셀업로드</span></span>
+    <div id="story" style="display: none">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="#"  method="post" class="form-inline" role="form" enctype="multipart/form-data" id="fileUploadForm">
+                <input type="hidden" id="boardIdx" name="boardIdx" value="999"/>
+                <div class="form-group">
+                    <label for="fileVal">거래처별 등급 엑셀업로드</label>
+                    <input type="file"  id="fileVal" name="file"/><br/>
+                </div>
+                <button type="submit" class="btn btn-danger" id="btnSubmit">업로드</button>
+            </form>
+            <div>
+                <p>| 거래처코드 | 등급 [G001~G005] | 전문가몰가입유무 [전문가몰, 미가입처] |</p>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="alert alert-success" id="success-alert" style="display: none">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Success! </strong>
+        거래처별 등급 엑셀파일 업로드.
+    </div>
+
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="javascript:getAccountGradeList(1)" method="post" class="form-inline" role="form" id="searchForm">
+                <input type="hidden" name="pageNumber" id="pageNumber" />
+                <input type="hidden" name="callName" id="callName" value="getAccountGradeList" />
+                <div class="form-group">
+                    <label for="searchAccountCode">거래처코드</label>
+                    <input type="text" class="form-control" name="searchAccountCode" id="searchAccountCode" placeholder="거래처" />
+                </div>
+                <div class="form-group">
+                    <label for="searchAccountName">거래처</label>
+                    <input type="text" class="form-control" name="searchAccountName" id="searchAccountName" placeholder="거래처" />
+                </div>
+                <div class="form-group">
+                    <label for="searchAccountGrade">등급</label>
+                    <!--<input type="text" class="form-control" name="searchAccountGrade" id="searchAccountGrade" placeholder="영업담당자" />-->
+                    <select name="searchAccountGrade" id="searchAccountGrade" class="form-control">
+                        <option th:each="item : ${selectGrade}"
+                                th:value="${item.value}"
+                                th:text="${item.key}">등급</option>
+                    </select>
+                </div>
+                <button type="button" class="btn pull-right btn-danger" onclick="getAccountGradeList(1)">검색</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <button type="button" class="btn btn-primary" onclick="createAccountGradeInfo();">등록</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-fixed">
+                    <thead>
+                    <tr>
+                        <th class="text-center">거래처코드</th>
+                        <th class="text-center">거래처</th>
+                        <th class="text-center">등급코드</th>
+                        <th class="text-center">등급</th>
+                        <th class="text-center">전문가몰가입유무</th>
+                        <th class="text-center function">기능</th>
+                    </tr>
+                    </thead>
+                    <tbody id="listBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<!-- Modal -->
+<div class="modal fade" id="createAccountGradeInfoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="#" method="post" id="createAccountGradeInfoModalForm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">거래처별 등급 정보 등록</h4>
+            </div>
+            <div class="modal-body">
+                <!--<div class="row">-->
+                    <!--<div class="col-md-6 col-md-offset-3">-->
+                        <!--<form autocomplete="off" action="#" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post" class="form-horizontal" role="form">-->
+                            <input type="hidden" name="maimSeq" id="maimSeq" value="0" />
+                            <div class="form-group has-error">
+                                <label class="col-sm-3 control-label" for="accountCode">거래처코드</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="accountCode" id="accountCode" placeholder="거래처코드" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="accountName">거래처</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="accountName" id="accountName" placeholder="거래처" class="form-control" readonly="true" />
+                                </div>
+                            </div>
+
+                            <div class="form-group has-error">
+                                <label class="col-sm-3 control-label" for="gradeCode">등급</label>
+                                <div class="col-sm-8">
+                                    <select name="gradeCode" id="gradeCode" class="form-control">
+                                        <option th:each="item : ${selectGrade}"
+                                                th:value="${item.value}"
+                                                th:text="${item.key}">등급</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="godomollYn">전문가몰가입유무</label>
+                                <div class="col-sm-8">
+                                    <select name="godomollYn" id="godomollYn" class="form-control">
+                                        <option th:each="item : ${selectGodomoll}"
+                                                th:value="${item.value}"
+                                                th:text="${item.key}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                <div class="alert alert-warnning" id="warnning-alert" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert">x</button>
+                    <strong>경고! </strong>
+                    <p id="warnning-message"></p>
+                </div>
+                            <!--<span th:utext="${successMessage}"></span>-->
+                        <!--</form>-->
+                    <!--</div>-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveAccountGradeInfo();" id="createAccountGradeInfoBtn">등록</button>
+                <button type="button" class="btn btn-danger pull-right" onclick="deleteAccountGradeInfo();" id="deleteAccountGradeInfoBtn" style="display: none">삭제</button>
+                <button type="button" class="btn btn-primary" onclick="closeModal('createAccountGradeInfoModal');">닫기</button>
+            </div>
+    </form>
+    </div>
+</div>
+<!-- modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="popupAccountInfoModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="javascript:popupAccountInfoList(1);" method="post" id="popupAccountInfoForm">
+            <input type="hidden" name="relayGroupCode" id="relayGroupCode" value="" />
+            <input type="hidden" name="pageNumber2" id="pageNumber2" />
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">거래처정보</h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel-group">
+                    <div class="panel panel-primary">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="accountName2">거래처</label>
+                            <div class="col-sm-5">
+                                <input type="text" class="form-control" name="accountName2" id="accountName2" placeholder="거래처" />
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" class="btn pull-right btn-danger" onclick="popupAccountInfoList(1)">검색</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed">
+                        <thead>
+                        <tr>
+                            <th class="text-center">거래처코드</th>
+                            <th class="text-center">거래처</th>
+                            <th class="text-center">사업자등록번호</th>
+                            <th class="text-center">대표자명</th>
+                            <th class="text-center">주소</th>
+                        </tr>
+                        </thead>
+                        <tbody id="popupAccountInfoBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-md-12 col-xs-12 text-center">
+                    <p id="pagination-popupAccountInfoModal" class="pagination-margin" align="center"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeModal('popupAccountInfoModal2');">닫기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- modal -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getAccountGradeList(1);
+
+$('#accountCode').on('click', function (e) {
+    e.preventDefault();
+    $('#createMemberAccountInfoModal').modal('hide');
+    $('#popupAccountInfoModal2').modal();
+    //accountName2
+    $('#popupAccountInfoModal2').on('shown.bs.modal', function () {
+        $('#accountName2').focus()
+    });
+    popupAccountInfoList(1);
+});
+
+$('#accountCode').on('keyup', function (e) {
+    e.preventDefault();
+    $('#accountCode').val('');
+    $('#createMemberAccountInfoModal').modal('hide');
+    $('#popupAccountInfoModal2').modal();
+    $('#popupAccountInfoModal2').on('shown.bs.modal', function () {
+        $('#accountName2').focus()
+    });
+    popupAccountInfoList(1);
+});
+</script>
+
+</body>
+</html>

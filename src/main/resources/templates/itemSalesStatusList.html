@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/itemSalesStatusList}">담당별/품목별 매출 현황</a></h1>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="javascript:getItemSalesStatusList();" method="post" class="form-inline" role="form" id="searchForm">
+            <input type="hidden" name="pageNumber" id="pageNumber" />
+            <input type="hidden" name="callName" id="callName" value="getItemSalesStatusList" />
+            <input type="hidden" id="boardIdx" name="boardIdx" value="itemSalesStatusList"/>
+            <!--<div class="form-group">-->
+                <!--<label for="salesManagerName">담당자</label>-->
+                <!--<input type="text" class="form-control" name="salesManagerName" id="salesManagerName" placeholder="담당자" />-->
+            <!--</div>-->
+            <div class="form-group">
+                <label for="searchYearMonth">기준일자</label>
+                <input type="text" name="searchYearMonth" id="searchYearMonth" placeholder="yyyy-mm" value="" />
+            </div>
+            <button type="button" class="btn pull-right btn-danger" onclick="getItemSalesStatusList()">검색</button>
+        </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <button type="button" class="btn btn-primary" id="btnExcel" onclick="downloadExcel()" data-toggle="modal" data-target="#myModal" >엑셀다운로드</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+            <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="editForm">
+            <table class="table table-bordered table-hover table-fixed">
+                <thead>
+                <tr>
+                    <th class="text-center">팀</th>
+                    <th class="text-center">영업소</th>
+                    <th class="text-center">담당자</th>
+                    <th class="text-center">골드</th>
+                    <th class="text-center">골드 세트(130포)</th>
+                    <th class="text-center">골드 본품(60포)-리뉴얼</th>
+                    <th class="text-center">골드 본품(60포)</th>
+                    <th class="text-center">베이비</th>
+                    <th class="text-center">베이비 세트(120포)</th>
+                    <th class="text-center">베이비 본품(60포)</th>
+                    <th class="text-center">얌얌</th>
+                    <th class="text-center">케어</th>
+                    <th class="text-center">케어 본품(60C)-리뉴얼</th>
+                    <th class="text-center">케어 본품(60C)</th>
+
+                    <th class="text-center">에이티피</th>
+                    <th class="text-center">에이티피 본품(70포)</th>
+                    <th class="text-center">에이티피 세트(150포)</th>
+                    <th class="text-center">아이비에스 소계</th>
+                    <th class="text-center">아이비에스_신(30C)</th>
+                    <th class="text-center">아이비에스_신(60C)</th>
+                    <th class="text-center">듀오락스탑</th>
+                    <th class="text-center">듀오자임 플러스</th>
+                    <th class="text-center">듀오락12</th>
+                    <th class="text-center">키즈</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            </form>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <!--<div class="col-md-12 col-xs-12 text-center page-margin">-->
+                <!--<p id="pagination-here" style="margin-top: 30px;" align="center"></p>-->
+            <!--</div>-->
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getItemSalesStatusList(1);
+</script>
+
+</body>
+</html>

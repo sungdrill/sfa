@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.neoe.NeoeListMapper">
+    <select id="selectNeoeListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+            SELECT CD_ITEM, NM_ITEM, CD_SL, NM_SL, SUM(QT_INV) AS QT
+            FROM (
+            SELECT
+                    X.DT,
+                    P.CD_ITEM,
+                    ISNULL(P.NM_ITEM, '')    NM_ITEM,
+                    X.CD_SL,
+                    CASE WHEN S.NM_SL IS NULL
+                    THEN X.CD_SL
+                    ELSE S.NM_SL END         NM_SL,
+                    X.QT_INV
+
+            FROM NEOE.DZSN_MA_PITEM P LEFT OUTER JOIN
+            (
+                SELECT
+                YM_STANDARD DT,
+                CD_SL,
+                CD_ITEM,
+                QT_GOOD_INV QT_INV
+
+                FROM NEOE.MM_OPENQTL
+                WHERE CD_COMPANY = '1000' --@P_CD_COMPANY
+                AND CD_PLANT = '1000' --@P_CD_PLANT
+                AND YM_STANDARD = LEFT(#{searchDateInput}, 4) + '00'
+                <if test="itemFrom !=null and itemFrom !=''">
+        <![CDATA[
+                AND (CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            ]]>
+                </if>
+                <if test="itemTo !=null and itemTo !=''">
+        <![CDATA[
+                AND (CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+            ]]>
+                </if>
+
+                UNION ALL
+
+                SELECT
+                YM_IO                                                     DT,
+                CD_SL,
+                CD_ITEM,
+                SUM(QT_GOOD_GR + QT_REJECT_GR + QT_INSP_GR + QT_TRANS_GR) -
+                SUM(QT_GOOD_GI + QT_REJECT_GI + QT_INSP_GI + QT_TRANS_GI) QT_INV
+
+                FROM NEOE.MM_OHSLINVM
+                WHERE CD_COMPANY = '1000' --@P_CD_COMPANY
+        <![CDATA[
+                AND YM_IO >= LEFT(#{searchDateInput}, 4) + '00'
+                AND YM_IO <= LEFT(#{searchDateInput}, 6) - 1
+            ]]>
+                AND CD_PLANT = '1000' --@P_CD_PLANT
+                <if test="itemFrom !=null and itemFrom !=''">
+        <![CDATA[
+                AND (CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            ]]>
+                </if>
+                <if test="itemTo !=null and itemTo !=''">
+        <![CDATA[
+                AND (CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+            ]]>
+                </if>
+
+                GROUP BY YM_IO, CD_SL, CD_ITEM
+
+
+                UNION ALL
+
+                SELECT
+                L.DT_IO      DT,
+                L.CD_SL,
+                L.CD_ITEM,
+                L.QT_GOOD_GR - L.QT_GOOD_GI + L.QT_REJECT_GR - L.QT_REJECT_GI + L.QT_TRANS_GR - L.QT_TRANS_GI + L.QT_INSP_GR -
+                L.QT_INSP_GI QT_INV
+
+                FROM NEOE.MM_OHSLINVD L
+                INNER JOIN NEOE.DZSN_MA_PITEM P
+                ON P.CD_COMPANY = '1000' --@P_CD_COMPANY
+                AND P.CD_PLANT = '1000' --@P_CD_PLANT
+                AND P.CD_ITEM = L.CD_ITEM
+                WHERE L.CD_COMPANY = '1000' --@P_CD_COMPANY
+                AND L.CD_PLANT = '1000' --@P_CD_PLANT
+        <![CDATA[
+                AND L.DT_IO <= #{searchDateInput}
+            ]]>
+                AND L.DT_IO > LEFT(#{searchDateInput}, 6) + '00'
+                <if test="itemFrom !=null and itemFrom !=''">
+        <![CDATA[
+                AND (L.CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            ]]>
+                </if>
+                <if test="itemTo !=null and itemTo !=''">
+        <![CDATA[
+                AND (L.CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+            ]]>
+                </if>
+
+            ) X ON P.CD_COMPANY = '1000'
+            AND P.CD_PLANT = '1000'
+            AND P.CD_ITEM = X.CD_ITEM
+            AND P.YN_USE = 'Y' -- 품목사용유무
+            AND P.TP_PROC = 'M' -- 완제품만
+            LEFT OUTER JOIN NEOE.DZSN_MA_SL S
+            ON S.CD_COMPANY = '1000'
+            AND S.CD_PLANT = '1000'
+            AND S.CD_SL = X.CD_SL
+
+            LEFT OUTER JOIN (
+                SELECT CD_ITEM, SUM(QT_SO) QT
+                FROM
+                (
+                SELECT CD_ITEM, QT_SO FROM NEOE.V_SA_SOHL
+                WHERE 1=1
+                AND CD_PARTNER = '00546'
+        <![CDATA[
+                AND DT_SO >=LEFT(#{searchDateInput}, 6)+'01'
+                AND DT_SO <= #{searchDateInput}
+        ]]>
+                ) A
+                GROUP BY 	CD_ITEM
+            ) Y ON P.CD_ITEM = Y.CD_ITEM
+
+            WHERE P.CD_COMPANY = '1000'
+            AND P.CD_PLANT = '1000'
+            <if test="itemFrom !=null and itemFrom !=''">
+            AND (P.CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            </if>
+            <if test="itemTo !=null and itemTo !=''">
+        <![CDATA[
+            AND (P.CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+        ]]>
+            </if>
+            AND (#{multiCdSl} IS NULL OR #{multiCdSl} = '' OR X.CD_SL IN (SELECT CD_STR FROM NEOE.GETTABLEFROMSPLIT(#{multiCdSl})))
+            ) A
+            GROUP BY CD_ITEM, NM_ITEM, CD_SL, NM_SL
+        ) AA
+        WHERE 1=1
+        <if test='ynUseQtInv == null'>
+            AND QT <![CDATA[ <> ]]>0
+        </if>
+        <if test="itemNm !=null and itemNm !=''">
+            AND NM_ITEM LIKE '%' + #{itemNm} + '%'
+        </if>
+    </select>
+
+    <select id="selectNeoeList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+            SELECT  CD_ITEM,
+                    NM_ITEM,
+                    CD_SL,
+                    NM_SL,
+                    #{searchDateInput} AS dt,
+                    SUM(QT_INV) AS QT,
+                    ISNULL(MAX(CBTI_QT), 0) AS cbtiQt,
+                    ISNULL(MAX(SALES_QT), 0) AS salesQt,
+                    ISNULL(MAX(AM), 0) AS am,
+                    ISNULL(MAX(VAT), 0) AS vat,
+                    ISNULL(MAX(GI), 0) AS gi
+            FROM (
+            SELECT
+                    X.DT,
+                    P.CD_ITEM,
+                    ISNULL(P.NM_ITEM, '')    NM_ITEM,
+                    X.CD_SL,
+                    CASE WHEN S.NM_SL IS NULL
+                    THEN X.CD_SL
+                    ELSE S.NM_SL END         NM_SL,
+                    X.QT_INV,
+                    Y.QT AS CBTI_QT,
+                    Z.QT AS SALES_QT,
+                    Z.AM,
+                    Z.VAT,
+                    Z.GI
+
+            FROM NEOE.DZSN_MA_PITEM P LEFT OUTER JOIN
+            (
+                SELECT
+                YM_STANDARD DT,
+                CD_SL,
+                CD_ITEM,
+                QT_GOOD_INV QT_INV
+
+                FROM NEOE.MM_OPENQTL
+                WHERE CD_COMPANY = '1000' --@P_CD_COMPANY
+                AND CD_PLANT = '1000' --@P_CD_PLANT
+                AND YM_STANDARD = LEFT(#{searchDateInput}, 4) + '00'
+                <if test="itemFrom !=null and itemFrom !=''">
+            <![CDATA[
+                AND (CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            ]]>
+                </if>
+                <if test="itemTo !=null and itemTo !=''">
+            <![CDATA[
+                AND (CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+            ]]>
+                </if>
+
+                UNION ALL
+
+                SELECT
+                YM_IO                                                     DT,
+                CD_SL,
+                CD_ITEM,
+                SUM(QT_GOOD_GR + QT_REJECT_GR + QT_INSP_GR + QT_TRANS_GR) -
+                SUM(QT_GOOD_GI + QT_REJECT_GI + QT_INSP_GI + QT_TRANS_GI) QT_INV
+
+                FROM NEOE.MM_OHSLINVM
+                WHERE CD_COMPANY = '1000' --@P_CD_COMPANY
+        <![CDATA[
+                AND YM_IO >= LEFT(#{searchDateInput}, 4) + '00'
+                AND YM_IO <= LEFT(#{searchDateInput}, 6) - 1
+            ]]>
+                AND CD_PLANT = '1000' --@P_CD_PLANT
+                <if test="itemFrom !=null and itemFrom !=''">
+            <![CDATA[
+                AND (CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            ]]>
+                </if>
+                <if test="itemTo !=null and itemTo !=''">
+            <![CDATA[
+                AND (CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+            ]]>
+                </if>
+
+                GROUP BY YM_IO, CD_SL, CD_ITEM
+
+
+                UNION ALL
+
+                SELECT
+                L.DT_IO      DT,
+                L.CD_SL,
+                L.CD_ITEM,
+                L.QT_GOOD_GR - L.QT_GOOD_GI + L.QT_REJECT_GR - L.QT_REJECT_GI + L.QT_TRANS_GR - L.QT_TRANS_GI + L.QT_INSP_GR -
+                L.QT_INSP_GI QT_INV
+
+                FROM NEOE.MM_OHSLINVD L
+                INNER JOIN NEOE.DZSN_MA_PITEM P
+                ON P.CD_COMPANY = '1000' --@P_CD_COMPANY
+                AND P.CD_PLANT = '1000' --@P_CD_PLANT
+                AND P.CD_ITEM = L.CD_ITEM
+                WHERE L.CD_COMPANY = '1000' --@P_CD_COMPANY
+                AND L.CD_PLANT = '1000' --@P_CD_PLANT
+        <![CDATA[
+                AND L.DT_IO <= #{searchDateInput}
+            ]]>
+                AND L.DT_IO > LEFT(#{searchDateInput}, 6) + '00'
+                <if test="itemFrom !=null and itemFrom !=''">
+            <![CDATA[
+                AND (L.CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+            ]]>
+                </if>
+                <if test="itemTo !=null and itemTo !=''">
+            <![CDATA[
+                AND (L.CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+            ]]>
+                </if>
+
+            ) X ON P.CD_COMPANY = '1000'
+            AND P.CD_PLANT = '1000'
+            AND P.CD_ITEM = X.CD_ITEM
+            AND P.YN_USE = 'Y' -- 품목사용유무
+            AND P.TP_PROC = 'M' -- 완제품만
+            LEFT OUTER JOIN NEOE.DZSN_MA_SL S
+            ON S.CD_COMPANY = '1000'
+            AND S.CD_PLANT = '1000'
+            AND S.CD_SL = X.CD_SL
+
+            LEFT OUTER JOIN (
+                SELECT CD_ITEM, SUM(QT_SO) QT
+                FROM
+                (
+                SELECT CD_ITEM, QT_SO FROM NEOE.V_SA_SOHL
+                WHERE 1=1
+                AND CD_PARTNER = '00546'
+                <![CDATA[
+                        AND DT_SO >=LEFT(#{searchDateInput}, 6)+'01'
+                        AND DT_SO <= #{searchDateInput}
+                ]]>
+                ) A
+                GROUP BY 	CD_ITEM
+            ) Y ON P.CD_ITEM = Y.CD_ITEM
+
+            LEFT OUTER JOIN (
+                SELECT CD_ITEM, SUM(QT_IO) QT, SUM(AM) AM, SUM(VAT) VAT, SUM(AM+VAT) GI
+                FROM (
+                    SELECT CD_SL, DT_IO, CD_QTIOTP, CD_ITEM,
+                        CASE WHEN CD_QTIOTP = '240'
+                        THEN -1 * QT_IO ELSE QT_IO END AS QT_IO,
+                        CASE WHEN CD_QTIOTP = '240'
+                        THEN -1 * AM ELSE AM END AS AM,  -- 원화금액
+                        CASE WHEN CD_QTIOTP = '240'
+                        THEN -1 * VAT ELSE VAT END VAT   -- vat
+                    FROM NEOE.MM_QTIO
+                    WHERE 1=1
+                    AND CD_COMPANY = '1000'
+                    AND CD_PLANT = '1000'
+              <![CDATA[
+                    AND CD_PARTNER <> '00546'
+                    AND DT_IO >=LEFT(#{searchDateInput}, 6)+'01'
+                    AND DT_IO <= #{searchDateInput}
+              ]]>
+--                     AND CD_SL = @P_MULTI_CD_SL
+        AND (#{multiCdSl} IS NULL OR #{multiCdSl} = '' OR CD_SL IN (SELECT CD_STR FROM NEOE.GETTABLEFROMSPLIT(#{multiCdSl})))
+                    AND CD_QTIOTP IN ('200','240')
+                ) A
+                GROUP BY CD_ITEM
+            ) Z ON P.CD_ITEM = Z.CD_ITEM
+
+            WHERE P.CD_COMPANY = '1000'
+            AND P.CD_PLANT = '1000'
+            <if test="itemFrom !=null and itemFrom !=''">
+        <![CDATA[
+            AND (P.CD_ITEM >= #{itemFrom} OR #{itemFrom} = '' OR #{itemFrom} IS NULL)
+        ]]>
+            </if>
+            <if test="itemTo !=null and itemTo !=''">
+        <![CDATA[
+            AND (P.CD_ITEM <= #{itemTo} OR #{itemTo} = '' OR #{itemTo} IS NULL)
+        ]]>
+        </if>
+        AND (#{multiCdSl} IS NULL OR #{multiCdSl} = '' OR X.CD_SL IN (SELECT CD_STR FROM NEOE.GETTABLEFROMSPLIT(#{multiCdSl})))
+        ) A
+        GROUP BY CD_ITEM, NM_ITEM, CD_SL, NM_SL
+        ) AA
+        WHERE 1=1
+        <if test='ynUseQtInv == null'>
+        AND QT <![CDATA[ <> ]]>0
+        </if>
+        <if test="itemNm !=null and itemNm !=''">
+            AND NM_ITEM LIKE '%' + #{itemNm} + '%'
+        </if>
+        ORDER BY CD_ITEM
+    </select>
+
+    <select id="selectNeoeDetailList" parameterType="Map" resultType="Map">
+        SELECT  X.DT,
+                P.CD_ITEM,
+                ISNULL(P.NM_ITEM, '')    NM_ITEM,
+                X.CD_SL,
+                CASE WHEN S.NM_SL IS NULL
+                THEN X.CD_SL
+                ELSE S.NM_SL END         NM_SL,
+                X.qtIn,
+                X.qtOut,
+                X.QT_INV,
+                ISNULL(Y.QT, 0) AS CBTI_QT,
+                ISNULL(Z.QT, 0) AS SALES_QT,
+                ISNULL(Z.AM, '0') AS AM,
+                ISNULL(Z.VAT, '0') AS VAT,
+                ISNULL(Z.GI, '0') AS GI
+        FROM NEOE.DZSN_MA_PITEM P LEFT OUTER JOIN
+        (
+         SELECT DT, AA.CD_SL, AA.CD_ITEM, SUM(qtIn) qtIn, SUM(qtOut) qtOut, SUM(QT_INV) QT_INV
+           FROM
+           (
+            -- 기초재고
+            SELECT
+                LEFT(YM_STANDARD, 4) + '01' DT,
+                CD_SL,
+                CD_ITEM,
+                QT_GOOD_INV qtIn,
+                0 qtOut,
+                0 QT_INV
+            FROM NEOE.MM_OPENQTL
+            WHERE CD_COMPANY = '1000' --@P_CD_COMPANY
+            AND CD_PLANT = '1000' --@P_CD_PLANT
+            AND YM_STANDARD = CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'00'
+        <![CDATA[
+            AND (CD_ITEM >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+            AND (CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        ]]>
+
+            UNION ALL
+            SELECT B.balancedate DT, #{multiCdSl} AS CD_SL, #{itemCode} AS CD_ITEM, ISNULL(BB.qtIn,0) AS qtIn, ISNULL(BB.qtOut,0) AS qtOut, ISNULL(BB.QT_INV,0) QT_INV
+            FROM (
+                SELECT * FROM (
+                    VALUES
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'01'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'02'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'03'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'04'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'05'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'06'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'07'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'08'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'09'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'10'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'11'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'12'),
+                    (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'01')
+                    <if test='searchDateInput >= compareDate+"02"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'02')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"03"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'03')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"04"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'04')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"05"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'05')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"06"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'06')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"07"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'07')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"08"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'08')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"09"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'09')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"10"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'10')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"11"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'11')
+                    </if>
+                    <if test='searchDateInput >= compareDate+"12"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'12')
+                    </if>
+                    ) AS t (balancedate)
+            ) B LEFT OUTER JOIN (
+            -- 월별 재고
+            SELECT
+                YM_IO                                                     DT,
+                CD_SL,
+                CD_ITEM,
+                SUM(QT_GOOD_GR + QT_REJECT_GR + QT_INSP_GR + QT_TRANS_GR) qtIn,
+                SUM(QT_GOOD_GI + QT_REJECT_GI + QT_INSP_GI + QT_TRANS_GI) qtOut,
+                0 QT_INV
+            FROM NEOE.MM_OHSLINVM
+            WHERE CD_COMPANY = '1000' --@P_CD_COMPANY
+            AND YM_IO >= CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)
+        <![CDATA[
+            AND YM_IO <= LEFT(#{searchDateInput}, 6)
+            AND CD_PLANT = '1000' --@P_CD_PLANT
+            AND (CD_ITEM >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+            AND (CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+            AND CD_SL IN (SELECT CD_STR FROM NEOE.GETTABLEFROMSPLIT(#{multiCdSl}))
+        ]]>
+
+            GROUP BY YM_IO, CD_SL, CD_ITEM
+            ) BB ON B.balancedate = BB.DT
+         ) AA
+	    GROUP BY AA.DT, AA.CD_SL, AA.CD_ITEM
+
+        ) X ON P.CD_COMPANY = '1000' --@P_CD_COMPANY
+        AND P.CD_PLANT = '1000' --@P_CD_PLANT
+        AND P.CD_ITEM = X.CD_ITEM
+        AND P.YN_USE = 'Y' -- 품목사용유무
+        AND P.TP_PROC = 'M' -- 완제품만
+        LEFT OUTER JOIN NEOE.DZSN_MA_SL S
+        ON S.CD_COMPANY = '1000' --@P_CD_COMPANY
+        AND S.CD_PLANT = '1000' --@P_CD_PLANT
+        AND S.CD_SL = X.CD_SL
+
+        -- 배송실 입고 수량
+        LEFT OUTER JOIN (
+        SELECT DT_SO DT, CD_ITEM, SUM(QT_SO) QT
+        FROM
+        (
+        SELECT LEFT(DT_SO, 6) DT_SO, CD_ITEM, QT_SO FROM NEOE.V_SA_SOHL
+        WHERE 1=1
+        AND CD_PARTNER = '00546'
+        AND DT_SO >=CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1) + '0101'
+        <![CDATA[
+        AND DT_SO <= #{searchDateInput}
+        AND (CD_ITEM >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        AND (CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        ]]>
+        ) A
+        GROUP BY 	DT_SO, CD_ITEM
+        ) Y ON X.CD_ITEM = Y.CD_ITEM AND X.DT = Y.DT
+
+        -- 영업 출고 수량
+        LEFT OUTER JOIN (
+        SELECT DT_IO DT, CD_ITEM, SUM(QT_IO) QT, SUM(AM) AM, SUM(VAT) VAT, SUM(AM+VAT) GI
+        FROM (
+        SELECT LEFT(DT_IO, 6) DT_IO, CD_SL, CD_QTIOTP, CD_ITEM,
+        CASE WHEN CD_QTIOTP = '240'
+        THEN -1 * QT_IO ELSE QT_IO END AS QT_IO,
+        CASE WHEN CD_QTIOTP = '240'
+        THEN -1 * AM ELSE AM END AS AM,  -- 원화금액
+        CASE WHEN CD_QTIOTP = '240'
+        THEN -1 * VAT ELSE VAT END VAT   -- vat
+        FROM NEOE.MM_QTIO
+        WHERE 1=1
+        AND CD_COMPANY = '1000'
+        AND CD_PLANT = '1000'
+        AND DT_IO >= CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1) + '0101'
+        <![CDATA[
+        AND CD_PARTNER <> '00546'
+        AND DT_IO <= #{searchDateInput}
+        AND CD_SL = #{multiCdSl}
+        AND CD_QTIOTP IN ('200','240')
+        AND (CD_ITEM >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        AND (CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        ]]>
+        ) A
+        GROUP BY DT_IO, CD_ITEM
+        ) Z ON X.CD_ITEM = Z.CD_ITEM AND X.DT = Z.DT
+
+        WHERE P.CD_COMPANY = '1000' --@P_CD_COMPANY
+        AND P.CD_PLANT = '1000' -- @P_CD_PLANT
+        <![CDATA[
+        AND (P.CD_ITEM >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        AND (P.CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        AND (#{multiCdSl} IS NULL OR #{multiCdSl} = '' OR X.CD_SL IN (SELECT CD_STR FROM NEOE.GETTABLEFROMSPLIT(#{multiCdSl})))
+        ]]>
+        ORDER BY DT
+    </select>
+
+</mapper>

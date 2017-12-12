@@ -1,0 +1,281 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/groupCodeList}">공통코드</a></h1>
+        </div>
+    </div>
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+                <input type="hidden" name="pageNumber" id="pageNumber" />
+                <input type="hidden" name="callName" id="callName" value="getGroupCodeList" />
+                <div class="form-group">
+                    <label for="searchGroupCodeId">그룹코드</label>
+                    <input type="text" class="form-control" name="searchGroupCodeId" id="searchGroupCodeId" placeholder="그룹코드" />
+                </div>
+                <div class="form-group">
+                    <label for="searchGroupCodeName">그룹명</label>
+                    <input type="text" class="form-control" name="searchGroupCodeName" id="searchGroupCodeName" placeholder="그룹명" />
+                </div>
+                <div class="form-group">
+                    <label for="searchDate">등록일</label>
+                    <input type="text" class="form-control" name="searchDate" id="searchDate" placeholder="yyyy-mm-dd" value="" />
+                </div>
+                <button type="button" class="btn pull-right btn-danger" onclick="getGroupCodeList()">검색</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <!--<button type="button" class="btn btn-primary" id="btnExcel" onclick="location.href='/admin/codeListEdit'">등록</button>-->
+                <button type="button" class="btn btn-primary" onclick="createGroupCode();">등록</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-fixed">
+                    <thead>
+                    <tr>
+                        <th class="text-center">그룹코드</th>
+                        <th class="text-center">그룹명</th>
+                        <th class="text-center">그룹설명</th>
+                        <th class="text-center">사용여부</th>
+                        <!--<th class="text-center">등록자</th>-->
+                        <!--<th class="text-center">등록일</th>-->
+                        <th class="text-center" style="width:120px;">기능</th>
+                    </tr>
+                    </thead>
+                    <tbody id="groupCodeBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<!-- Modal -->
+<div class="modal fade" id="createGroupCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="#" method="post" id="createGroupCodeModalForm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">그룹코드 등록</h4>
+            </div>
+            <div class="modal-body">
+                <!--<div class="row">-->
+                    <!--<div class="col-md-6 col-md-offset-3">-->
+                        <!--<form autocomplete="off" action="#" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post" class="form-horizontal" role="form">-->
+                            <div class="form-group has-error">
+                                <label class="col-sm-2 control-label" for="groupCodeId">그룹코드</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="groupCodeId" id="groupCodeId" placeholder="그룹코드" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group has-error">
+                                <label class="col-sm-2 control-label" for="groupCodeName">그룹명</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="groupCodeName" id="groupCodeName" placeholder="그룹명" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="groupCodeExp">그룹설명</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="groupCodeExp" id="groupCodeExp" placeholder="그룹설명" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">사용여부</label>
+                                <div class="col-sm-9">
+                                    <!--<input type="text" th:field="*{useYn}" placeholder="사용여부" class="form-control" />-->
+                                    <select name="useYn" id="useYn" class="form-control">
+                                        <option value="Y">Y</option>
+                                        <option value="N">N</option>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                <div class="alert alert-warnning" id="warnning-alert" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert">x</button>
+                    <strong>경고! </strong>
+                    <p id="warnning-message"></p>
+                </div>
+                            <!--<span th:utext="${successMessage}"></span>-->
+                        <!--</form>-->
+                    <!--</div>-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveGroupCode();" id="createGroupCodeBtn">등록</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+    </form>
+    </div>
+</div>
+<!-- modal -->
+<!-- Modal -->
+<div class="modal fade" id="createCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="#" method="post" id="createCodeModalForm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">코드 등록</h4>
+            </div>
+            <div class="modal-body">
+                <!--<div class="row">-->
+                    <!--<div class="col-md-6 col-md-offset-3">-->
+                        <!--<form autocomplete="off" action="#" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post" class="form-horizontal" role="form">-->
+                            <div class="form-group has-error">
+                                <label class="col-sm-2 control-label" for="groupCodeId2">그룹코드</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="groupCodeId2" id="groupCodeId2" placeholder="그룹코드" class="form-control" readonly="readonly" />
+                                </div>
+                            </div>
+
+                            <div class="form-group has-error">
+                                <label class="col-sm-2 control-label" for="codeId">코드</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="codeId" id="codeId" placeholder="코드" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="codeName">코드명</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="codeName" id="codeName" placeholder="코드명" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="sort">순위</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sort" id="sort" placeholder="순위" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">사용여부</label>
+                                <div class="col-sm-9">
+                                    <!--<input type="text" th:field="*{useYn}" placeholder="사용여부" class="form-control" />-->
+                                    <select name="useYn2" id="useYn2" class="form-control">
+                                        <option value="Y">Y</option>
+                                        <option value="N">N</option>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                <!--<div class="alert alert-warnning" id="warnning-alert" style="display: none">-->
+                    <!--<button type="button" class="close" data-dismiss="alert">x</button>-->
+                    <!--<strong>경고! </strong>-->
+                    <!--<p id="warnning-message"></p>-->
+                <!--</div>-->
+                            <!--<span th:utext="${successMessage}"></span>-->
+                        <!--</form>-->
+                    <!--</div>-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveCode();" id="createCodeBtn">등록</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+    </form>
+    </div>
+</div>
+<!-- modal -->
+<!-- Modal -->
+<div class="modal fade" id="showCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="#" method="post" id="showCodeModalForm">
+            <input type="hidden" name="relayGroupCode" id="relayGroupCode" value="" />
+            <input type="hidden" name="pageNumber2" id="pageNumber2" />
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">그룹코드 상세</h4>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed">
+                        <thead>
+                        <tr>
+                            <th class="text-center">그룹코드</th>
+                            <th class="text-center">코드</th>
+                            <th class="text-center">코드명</th>
+                            <th class="text-center">순위</th>
+                            <th class="text-center">사용여부</th>
+                            <!--<th class="text-center">등록자</th>-->
+                            <!--<th class="text-center">등록일</th>-->
+                            <th class="text-center" style="width:90px;">기능</th>
+                        </tr>
+                        </thead>
+                        <tbody id="codeBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-md-12 col-xs-12 text-center">
+                    <p id="pagination-showCodeModal" class="pagination-margin" align="center"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="createCode();">등록</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- modal -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getGroupCodeList(1);
+</script>
+
+</body>
+</html>

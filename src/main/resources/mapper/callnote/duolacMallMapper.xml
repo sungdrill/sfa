@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.callnote.DuolacMallMapper">
+    <select id="selectDuolacList" parameterType="Map" resultType="Map">
+        WITH PRODUCT_LIST AS(
+            SELECT
+            PROD_CD,
+            PROD_NM,
+            PROD_TYPE_GSP,
+            PROD_STATUS_CD,
+            PROD_DIS_PC_YN,
+            PROD_DIS_MOBILE_YN
+            FROM
+            P_PROD
+            WHERE
+            1=1
+            --    AND PROD_CD = @prod_cd
+        ), SUM_LIST AS(
+            SELECT
+            PROD_CD,
+            PROD_NM,
+            TARGET_DATE,
+            MAX(ORG_PROD_PRICE) ORG_PROD_PRICE,
+            ISNULL(SUM(PROD_QTY),0) PROD_QTY_SUM,ISNULL(SUM(PROD_PRICE),0) PROD_PRICE,
+            ROUND(SUM(convert(float,ISNULL(UNIT_SALES_PRICE,0))),0) PROD_PRICE_SUM,
+            ISNULL(SUM(ONE_TIME),0) ONE_TIME,
+            ISNULL(SUM(TWO_TIME),0) TWO_TIME,
+            ISNULL(SUM(THREE_TIME),0) THREE_TIME,
+            ISNULL(SUM(PROD_QTY_RETURN),0) PROD_QTY_RETURN,
+            MAX(PROD_TYPE_GSP) PROD_TYPE_GSP
+            FROM
+            (
+                SELECT
+                CONVERT(VARCHAR(10),
+                OCPO.CLAIM_PROC_ORDER_DT,
+                121) TARGET_DATE,
+                -((OOPR.PROD_QTY * ISNULL(PPF.PROD_PRICE,0))
+                - ((OOPR.PROD_QTY * ISNULL(PPF.PROD_PRICE,0))
+                * (100 - OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE - OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT))/100)) UNIT_SALES_PRICE       ,
+                PPD.PROD_CD,
+                PPD.PROD_NM,
+                0 AS ONE_TIME,
+                0 AS TWO_TIME,
+                0 AS THREE_TIME,
+                -(OOPR.PROD_QTY) PROD_QTY_RETURN,
+                -(OOPR.PROD_QTY) PROD_QTY,
+                -(ISNULL(PPF.PROD_PRICE, 0)) ORG_PROD_PRICE,
+                -(OOPR.PROD_QTY * ISNULL(PPF.PROD_PRICE, 0)) PROD_PRICE,
+                OOPR.PROD_TYPE_GSP
+                FROM
+                O_ORDER OOR
+                INNER JOIN
+                O_ORDER_SEND OOS
+                ON OOR.ORDER_NO = OOS.ORDER_NO
+                AND OOS.ORDER_PACKING_DT IS NOT NULL
+                AND OOR.CLAIM_YN = 'Y'
+                INNER JOIN
+                O_DEPOSIT OD
+                ON OOR.ORDER_NO = OD.ORDER_NO
+                INNER JOIN
+                O_ORDER_AMT_HIS OOAH
+                ON OOR.ORDER_NO = OOAH.ORDER_NO
+                INNER JOIN
+                O_CLAIM OCM
+                ON OOR.ORDER_NO = OCM.ORDER_NO
+                AND OCM.CLAIM_TP_CD IN ('OCT00006','OCT00007','OCT00008','OCT00009')
+                INNER JOIN
+                O_CLAIM_PROC_ORDER OCPO
+                ON OCM.ORDER_NO = OCPO.ORDER_NO
+                AND OCPO.CLAIM_PROC_STATUS_CD = 'OPS00007'
+                LEFT OUTER JOIN
+                (
+                    SELECT
+                    _OOPR.ORDER_NO,
+                    _OOPR.PROD_CD,
+                    _OOPR.PROD_INFO_REG_NO,
+                    _OOPR.PROD_QTY,
+                    _PPD.PROD_TYPE_GSP
+                    FROM
+                    V_O_ORDER_PROD _OOPR INNER JOIN PRODUCT_LIST _PPD
+                    ON _OOPR.PROD_CD = _PPD.PROD_CD
+                    AND _PPD.PROD_TYPE_GSP IN ('G', 'P')
+                    UNION ALL
+                    SELECT
+                    _OOPR.ORDER_NO,
+                    _PPS.PROD_SET_CD PROD_CD,
+                    _OOPR.PROD_INFO_REG_NO,
+                    _OOPR.PROD_QTY,
+                    _PPD.PROD_TYPE_GSP
+                    FROM
+                    V_O_ORDER_PROD _OOPR INNER JOIN P_PROD _PPD
+                    ON _OOPR.PROD_CD = _PPD.PROD_CD
+                    AND _PPD.PROD_TYPE_GSP = 'S'
+                    INNER JOIN P_PROD_SET _PPS
+                    ON _PPD.PROD_CD = _PPS.PROD_CD
+                ) OOPR
+                ON OOR.ORDER_NO = OOPR.ORDER_NO
+                RIGHT OUTER JOIN
+                PRODUCT_LIST PPD
+                ON OOPR.PROD_CD = PPD.PROD_CD
+                LEFT OUTER JOIN
+                P_PROD_FI PPF
+                ON OOPR.PROD_INFO_REG_NO = PPF.PROD_INFO_REG_NO
+                AND OOPR.PROD_CD = PPF.PROD_CD
+                WHERE
+                1=1
+                AND OCPO.CLAIM_PROC_STATUS_CD = 'OPS00007'
+                <![CDATA[
+                AND CONVERT(VARCHAR(10), OCPO.CLAIM_PROC_ORDER_DT, 121) >= #{regDate}
+                AND CONVERT(VARCHAR(10), OCPO.CLAIM_PROC_ORDER_DT, 121) <= #{regDate}
+                ]]>
+                UNION ALL
+                SELECT
+                CONVERT(VARCHAR(10),
+                OOS.ORDER_PACKING_DT,
+                121) TARGET_DATE,
+                ((OOP.PROD_QTY * ISNULL(PPF.PROD_PRICE, 0))
+                - ((OOP.PROD_QTY * ISNULL(PPF.PROD_PRICE, 0))
+                * (100 - OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE - OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT))/100)) UNIT_SALES_PRICE,
+                PPD.PROD_CD,
+                PPD.PROD_NM,
+                <![CDATA[
+                CASE WHEN CONVERT(VARCHAR(5), OOS.ORDER_PACKING_DT , 14) < '13:00' THEN OOP.PROD_QTY ELSE 0 END ONE_TIME,
+                CASE WHEN CONVERT(VARCHAR(5), OOS.ORDER_PACKING_DT , 14) >= '13:00' AND CONVERT(VARCHAR(5), OOS.ORDER_PACKING_DT , 14) < '15:00' THEN OOP.PROD_QTY ELSE 0 END TWO_TIME,
+                CASE WHEN CONVERT(VARCHAR(5), OOS.ORDER_PACKING_DT , 14) >= '15:00' AND CONVERT(VARCHAR(5), OOS.ORDER_PACKING_DT , 14) < '24:00' THEN OOP.PROD_QTY ELSE 0 END THREE_TIME,
+                ]]>
+                0,
+                OOP.PROD_QTY,
+                ISNULL(PPF.PROD_PRICE,
+                0) ORG_PROD_PRICE,
+                OOP.PROD_QTY * ISNULL(PPF.PROD_PRICE,
+                0) PROD_PRICE,
+                OOP.PROD_TYPE_GSP
+                FROM
+                O_ORDER OOR
+                INNER JOIN
+                O_ORDER_SEND OOS
+                ON OOR.ORDER_NO = OOS.ORDER_NO
+                <![CDATA[
+                AND CONVERT(VARCHAR(10), OOS.ORDER_PACKING_DT, 121) >= #{regDate}
+                AND CONVERT(VARCHAR(10), OOS.ORDER_PACKING_DT, 121) <= #{regDate}
+                ]]>
+                INNER JOIN
+                O_DEPOSIT OD
+                ON OOR.ORDER_NO = OD.ORDER_NO
+                INNER JOIN
+                O_ORDER_AMT_HIS OOAH
+                ON OOR.ORDER_NO = OOAH.ORDER_NO
+                LEFT OUTER JOIN
+                (
+                SELECT
+                _OOP.ORDER_NO,
+                _OOP.PROD_CD,
+                _OOP.PROD_INFO_REG_NO,
+                _OOP.PROD_QTY,
+                _PPD.PROD_TYPE_GSP
+                FROM
+                V_O_ORDER_PROD _OOP
+                INNER JOIN
+                PRODUCT_LIST _PPD
+                ON _OOP.PROD_CD = _PPD.PROD_CD
+                AND _PPD.PROD_TYPE_GSP IN ('G', 'P')
+                UNION ALL
+                SELECT
+                _OOP.ORDER_NO,
+                _PPS.PROD_SET_CD PROD_CD,
+                _OOP.PROD_INFO_REG_NO,
+                _OOP.PROD_QTY,
+                _PPD.PROD_TYPE_GSP
+                FROM
+                V_O_ORDER_PROD _OOP INNER JOIN P_PROD _PPD
+                ON _OOP.PROD_CD = _PPD.PROD_CD
+                AND _PPD.PROD_TYPE_GSP = 'S'
+                INNER JOIN P_PROD_SET _PPS
+                ON _PPD.PROD_CD = _PPS.PROD_CD
+                ) OOP
+                ON OOR.ORDER_NO = OOP.ORDER_NO
+                RIGHT OUTER JOIN
+                PRODUCT_LIST PPD
+                ON OOP.PROD_CD = PPD.PROD_CD
+                LEFT OUTER JOIN
+                P_PROD_FI PPF
+                ON OOP.PROD_INFO_REG_NO = PPF.PROD_INFO_REG_NO
+                AND OOP.PROD_CD = PPF.PROD_CD
+                WHERE
+                1=1
+            ) A
+            GROUP BY
+            PROD_CD,
+            PROD_NM,
+            TARGET_DATE
+        )
+        SELECT
+        CONVERT(VARCHAR(20),
+            ROW_NUMBER() OVER(ORDER BY PROD_NM)) NUM,
+            'DUOLAC' AS mallCode,
+            TARGET_DATE AS targetDate,
+            PROD_CD AS prodCd,
+            PROD_NM AS prodNm,
+            REPLACE( CONVERT( VARCHAR, CONVERT( MONEY, PROD_QTY_SUM ), 1 ), '.00', '' ) AS prodQty,
+            ORG_PROD_PRICE AS unitPrice,
+            PROD_PRICE AS prodPrice,
+            PROD_PRICE_SUM AS realProdPrice,
+			ONE_TIME AS oneTime,
+			TWO_TIME AS twoTime,
+			THREE_TIME AS threeTime,
+			PROD_QTY_RETURN AS prodQtyReturn,
+			PROD_TYPE_GSP AS prodTypeGsp
+        FROM
+        SUM_LIST
+        WHERE 1=1
+        AND PROD_QTY_SUM > 0
+    </select>
+
+    <select id="selectDuolacList3" parameterType="Map" resultType="Map">
+        WITH PRODUCT_LIST AS(
+        SELECT
+        PROD_CD,
+        PROD_NM,
+        PROD_TYPE_GSP,
+        PROD_STATUS_CD,
+        PROD_DIS_PC_YN,
+        PROD_DIS_MOBILE_YN
+        FROM
+        P_PROD
+        WHERE
+        1=1
+        ), SUM_LIST AS(
+            SELECT
+            PROD_CD,
+            PROD_NM,
+            TARGET_DATE,
+            MAX(ORG_PROD_PRICE) ORG_PROD_PRICE,
+            ISNULL(SUM(PROD_QTY),0) PROD_QTY_SUM,ISNULL(SUM(PROD_PRICE),0) PROD_PRICE,
+            ROUND(SUM(convert(float,ISNULL(UNIT_SALES_PRICE,0))),0) PROD_PRICE_SUM
+            FROM
+            (
+                SELECT
+                CONVERT(VARCHAR(10),
+                OCPO.CLAIM_PROC_ORDER_DT,
+                121) TARGET_DATE,
+                -((OOPR.PROD_QTY * ISNULL(PPF.PROD_PRICE,0))
+                - ((OOPR.PROD_QTY * ISNULL(PPF.PROD_PRICE,0))
+                * (100 - OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE - OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT))/100)) UNIT_SALES_PRICE       ,
+                PPD.PROD_CD,
+                PPD.PROD_NM,
+                -(OOPR.PROD_QTY) PROD_QTY,
+                -(ISNULL(PPF.PROD_PRICE, 0)) ORG_PROD_PRICE,
+                -(OOPR.PROD_QTY * ISNULL(PPF.PROD_PRICE, 0)) PROD_PRICE
+                FROM
+                O_ORDER OOR
+                INNER JOIN
+                O_ORDER_SEND OOS
+                ON OOR.ORDER_NO = OOS.ORDER_NO
+                AND OOS.ORDER_PACKING_DT IS NOT NULL
+                AND OOR.CLAIM_YN = 'Y'
+                INNER JOIN
+                O_DEPOSIT OD
+                ON OOR.ORDER_NO = OD.ORDER_NO
+                INNER JOIN
+                O_ORDER_AMT_HIS OOAH
+                ON OOR.ORDER_NO = OOAH.ORDER_NO
+                INNER JOIN
+                O_CLAIM OCM
+                ON OOR.ORDER_NO = OCM.ORDER_NO
+                AND OCM.CLAIM_TP_CD IN ('OCT00006','OCT00007','OCT00008','OCT00009')
+                INNER JOIN
+                O_CLAIM_PROC_ORDER OCPO
+                ON OCM.ORDER_NO = OCPO.ORDER_NO
+                AND OCPO.CLAIM_PROC_STATUS_CD = 'OPS00007'
+                LEFT OUTER JOIN
+                (
+                SELECT
+                _OOPR.ORDER_NO,
+                _OOPR.PROD_CD,
+                _OOPR.PROD_INFO_REG_NO,
+                _OOPR.PROD_QTY
+                FROM
+                V_O_ORDER_PROD _OOPR
+                INNER JOIN
+                PRODUCT_LIST _PPD
+                ON _OOPR.PROD_CD = _PPD.PROD_CD
+                AND _PPD.PROD_TYPE_GSP IN ('G', 'S')
+                UNION ALL
+                SELECT
+                _OOPR.ORDER_NO,
+                _OOPR.PROD_CD,
+                _OOPR.PROD_INFO_REG_NO,
+                _OOPR.PROD_QTY
+                FROM
+                V_O_ORDER_PROD _OOPR
+                INNER JOIN
+                PRODUCT_LIST _PPD
+                ON _OOPR.PROD_CD = _PPD.PROD_CD
+                AND _PPD.PROD_TYPE_GSP = 'P'
+                ) OOPR
+                ON OOR.ORDER_NO = OOPR.ORDER_NO
+                RIGHT OUTER JOIN
+                PRODUCT_LIST PPD
+                ON OOPR.PROD_CD = PPD.PROD_CD
+                LEFT OUTER JOIN
+                P_PROD_FI PPF
+                ON OOPR.PROD_INFO_REG_NO = PPF.PROD_INFO_REG_NO
+                AND OOPR.PROD_CD = PPF.PROD_CD
+                WHERE
+                1=1
+                AND OCPO.CLAIM_PROC_STATUS_CD = 'OPS00007'
+                <![CDATA[
+                AND CONVERT(VARCHAR(10), OCPO.CLAIM_PROC_ORDER_DT, 121) >= #{regDate}
+                AND CONVERT(VARCHAR(10), OCPO.CLAIM_PROC_ORDER_DT, 121) <= #{regDate}
+                ]]>
+                UNION
+                ALL       SELECT
+                CONVERT(VARCHAR(10),
+                OOS.ORDER_PACKING_DT,
+                121) TARGET_DATE,
+                ((OOP.PROD_QTY * ISNULL(PPF.PROD_PRICE, 0))
+                - ((OOP.PROD_QTY * ISNULL(PPF.PROD_PRICE, 0))
+                * (100 - OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE - OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT))/100)) UNIT_SALES_PRICE,
+                PPD.PROD_CD,
+                PPD.PROD_NM,
+                OOP.PROD_QTY,
+                ISNULL(PPF.PROD_PRICE,
+                0) ORG_PROD_PRICE,
+                OOP.PROD_QTY * ISNULL(PPF.PROD_PRICE,
+                0) PROD_PRICE
+                FROM
+                O_ORDER OOR
+                INNER JOIN
+                O_ORDER_SEND OOS
+                ON OOR.ORDER_NO = OOS.ORDER_NO
+        <![CDATA[
+                AND CONVERT(VARCHAR(10), OOS.ORDER_PACKING_DT, 121) >= #{regDate}
+                AND CONVERT(VARCHAR(10), OOS.ORDER_PACKING_DT, 121) <= #{regDate}
+                ]]>
+                INNER JOIN
+                O_DEPOSIT OD
+                ON OOR.ORDER_NO = OD.ORDER_NO
+                INNER JOIN
+                O_ORDER_AMT_HIS OOAH
+                ON OOR.ORDER_NO = OOAH.ORDER_NO
+                LEFT OUTER JOIN
+                (
+                SELECT
+                _OOP.ORDER_NO,
+                _OOP.PROD_CD,
+                _OOP.PROD_INFO_REG_NO,
+                _OOP.PROD_QTY
+                FROM
+                V_O_ORDER_PROD _OOP
+                INNER JOIN
+                PRODUCT_LIST _PPD
+                ON _OOP.PROD_CD = _PPD.PROD_CD
+                AND _PPD.PROD_TYPE_GSP IN ('G', 'S')
+                UNION ALL
+                SELECT
+                _OOP.ORDER_NO,
+                _OOP.PROD_CD,
+                _OOP.PROD_INFO_REG_NO,
+                _OOP.PROD_QTY
+                FROM
+                V_O_ORDER_PROD _OOP
+                INNER JOIN
+                PRODUCT_LIST _PPD
+                ON _OOP.PROD_CD = _PPD.PROD_CD
+                AND _PPD.PROD_TYPE_GSP = 'P'
+                ) OOP
+                ON OOR.ORDER_NO = OOP.ORDER_NO
+                RIGHT OUTER JOIN
+                PRODUCT_LIST PPD
+                ON OOP.PROD_CD = PPD.PROD_CD
+                LEFT OUTER JOIN
+                P_PROD_FI PPF
+                ON OOP.PROD_INFO_REG_NO = PPF.PROD_INFO_REG_NO
+                AND OOP.PROD_CD = PPF.PROD_CD
+                WHERE
+                1=1
+            ) A
+            GROUP BY
+            PROD_CD,
+            PROD_NM,
+            TARGET_DATE
+        )
+        SELECT
+        CONVERT(VARCHAR(20),
+            ROW_NUMBER() OVER(ORDER BY PROD_NM)) NUM,
+            'DUOLAC' AS mallCode,
+            TARGET_DATE AS targetDate,
+            PROD_CD AS prodCd,
+            PROD_NM AS prodNm,
+            REPLACE( CONVERT( VARCHAR, CONVERT( MONEY, PROD_QTY_SUM ), 1 ), '.00', '' ) AS prodQty,
+            ORG_PROD_PRICE AS unitPrice,
+            PROD_PRICE AS prodPrice,
+            PROD_PRICE_SUM AS realProdPrice
+        FROM
+        SUM_LIST
+        WHERE 1=1
+        AND PROD_QTY_SUM > 0
+    </select>
+
+    <select id="selectDuolacList2" parameterType="Map" resultType="Map">
+        SELECT
+        'DUOLAC' AS mallCode,
+        TARGET_DATE as targetDate,
+        PROD_CD as prodCd,
+        PROD_NM as prodNm,
+        MAX(ORG_PROD_PRICE) as unitPrice,
+        SUM(PROD_QTY) AS prodQty,
+        SUM(PROD_PRICE) AS prodPrice,
+        CEILING(ROUND(SUM(UNIT_SALES_PRICE), 0)) AS realProdPrice
+        FROM
+        (
+        SELECT
+        CONVERT(VARCHAR(10), OCPO.CLAIM_PROC_ORDER_DT, 121) TARGET_DATE
+        , 100 - (OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE + OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT)) ORG_AMOUNT
+        , -((OOPR.PROD_QTY * PPF.PROD_PRICE) - ((OOPR.PROD_QTY * PPF.PROD_PRICE) * (100 - OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE + OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT))/100)) UNIT_SALES_PRICE
+        , OOPR.PROD_CD
+        , PPD.PROD_NM
+        , OOPR.PROD_QTY
+        , PPF.PROD_PRICE ORG_PROD_PRICE
+        , OOPR.PROD_QTY * PPF.PROD_PRICE PROD_PRICE
+        FROM O_ORDER OOR INNER JOIN O_ORDER_SEND OOS
+        ON OOR.ORDER_NO = OOS.ORDER_NO
+        AND OOS.ORDER_PACKING_DT IS NOT NULL
+        AND OOR.CLAIM_YN = 'Y'
+        INNER JOIN O_DEPOSIT OD
+        ON OOR.ORDER_NO = OD.ORDER_NO
+        INNER JOIN O_ORDER_AMT_HIS OOAH
+        ON OOR.ORDER_NO = OOAH.ORDER_NO
+        INNER JOIN O_CLAIM OCM
+        ON OOR.ORDER_NO = OCM.ORDER_NO
+        AND OCM.CLAIM_TP_CD IN ('OCT00006','OCT00007','OCT00008','OCT00009')
+        INNER JOIN O_CLAIM_PROC_ORDER OCPO
+        ON OCM.ORDER_NO = OCPO.ORDER_NO
+        AND OCPO.CLAIM_PROC_STATUS_CD = 'OPS00007'
+        LEFT OUTER JOIN
+        (
+        SELECT _OOPR.ORDER_NO, _OOPR.PROD_CD, _OOPR.PROD_INFO_REG_NO, _OOPR.PROD_QTY FROM O_ORDER_PROD_RETURN _OOPR INNER JOIN P_PROD _PPD ON _OOPR.PROD_CD = _PPD.PROD_CD AND _PPD.PROD_TYPE_GSP = 'G'
+        UNION ALL
+        SELECT _OOPR.ORDER_NO, _PPS.PROD_SET_CD PROD_CD, _OOPR.PROD_INFO_REG_NO, _OOPR.PROD_QTY FROM O_ORDER_PROD_RETURN _OOPR INNER JOIN P_PROD _PPD ON _OOPR.PROD_CD = _PPD.PROD_CD AND _PPD.PROD_TYPE_GSP = 'S' INNER JOIN P_PROD_SET _PPS ON _PPD.PROD_CD = _PPS.PROD_CD
+        ) OOPR ON OOR.ORDER_NO = OOPR.ORDER_NO
+        INNER JOIN P_PROD PPD
+        ON OOPR.PROD_CD = PPD.PROD_CD
+        LEFT OUTER JOIN P_PROD_FI PPF
+        ON OOPR.PROD_INFO_REG_NO = PPF.PROD_INFO_REG_NO
+        AND OOPR.PROD_CD = PPF.PROD_CD
+        WHERE 1=1
+        AND OCPO.CLAIM_PROC_STATUS_CD = 'OPS00007'
+        <![CDATA[
+        AND OCPO.CLAIM_PROC_ORDER_DT >= CONVERT(datetime, #{regDate})
+        AND OCPO.CLAIM_PROC_ORDER_DT < DATEADD(DAY, 1, #{regDate})
+        ]]>
+        UNION ALL
+
+        SELECT
+        CONVERT(VARCHAR(10), OOS.ORDER_PACKING_DT, 121) TARGET_DATE
+        , 100 - (OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE + OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT)) ORG_AMOUNT
+        , ((OOP.PROD_QTY * PPF.PROD_PRICE) - ((OOP.PROD_QTY * PPF.PROD_PRICE) * (100 - OD.DEPOSIT_AMOUNT * 100 / (OOAH.ORDER_COPN_AMT + OOAH.ORDER_RESV_AMT + OOAH.ORDER_PT_OUT_SCORE + OOAH.ORDER_DELI_CHARGE + OD.DEPOSIT_AMOUNT))/100)) UNIT_SALES_PRICE
+        , OOP.PROD_CD
+        , PPD.PROD_NM
+        , OOP.PROD_QTY
+        , PPF.PROD_PRICE ORG_PROD_PRICE
+        , OOP.PROD_QTY * PPF.PROD_PRICE PROD_PRICE
+        FROM O_ORDER OOR INNER JOIN O_ORDER_SEND OOS
+        ON OOR.ORDER_NO = OOS.ORDER_NO
+        <![CDATA[
+        AND OOS.ORDER_PACKING_DT >= CONVERT(datetime, #{regDate})
+        AND OOS.ORDER_PACKING_DT < DATEADD(DAY, 1, #{regDate})
+        ]]>
+        INNER JOIN O_DEPOSIT OD
+        ON OOR.ORDER_NO = OD.ORDER_NO
+        INNER JOIN O_ORDER_AMT_HIS OOAH
+        ON OOR.ORDER_NO = OOAH.ORDER_NO
+        LEFT OUTER JOIN
+        (
+        SELECT _OOP.ORDER_NO, _OOP.PROD_CD, _OOP.PROD_INFO_REG_NO, _OOP.PROD_QTY FROM O_ORDER_PROD _OOP INNER JOIN P_PROD _PPD ON _OOP.PROD_CD = _PPD.PROD_CD AND _PPD.PROD_TYPE_GSP = 'G'
+        UNION ALL
+        SELECT _OOP.ORDER_NO, _PPS.PROD_SET_CD PROD_CD, _OOP.PROD_INFO_REG_NO, _OOP.PROD_QTY FROM O_ORDER_PROD _OOP INNER JOIN P_PROD _PPD ON _OOP.PROD_CD = _PPD.PROD_CD AND _PPD.PROD_TYPE_GSP = 'S' INNER JOIN P_PROD_SET _PPS ON _PPD.PROD_CD = _PPS.PROD_CD
+        ) OOP ON OOR.ORDER_NO = OOP.ORDER_NO
+        INNER JOIN P_PROD PPD
+        ON OOP.PROD_CD = PPD.PROD_CD
+        LEFT OUTER JOIN P_PROD_FI PPF
+        ON OOP.PROD_INFO_REG_NO = PPF.PROD_INFO_REG_NO
+        AND OOP.PROD_CD = PPF.PROD_CD
+        WHERE 1=1
+        ) A
+        GROUP BY TARGET_DATE, PROD_CD, PROD_NM
+        ORDER BY TARGET_DATE DESC
+    </select>
+</mapper>

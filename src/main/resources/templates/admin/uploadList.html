@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/uploadList}">엑셀업로드확인</a></h1>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+                <input type="hidden" name="pageNumber" id="pageNumber" />
+                <input type="hidden" name="callName" id="callName" value="getUploadList" />
+                <div class="form-group">
+                    <label for="originalFileName">업로드파일명</label>
+                    <input type="text" class="form-control" name="originalFileName" id="originalFileName" placeholder="업로드파일명" />
+                </div>
+                <div class="form-group">
+                    <label for="searchDate">생성일자</label>
+                    <input type="text" class="form-control" name="searchDate" id="searchDate" placeholder="yyyy-mm-dd" value="" />
+                </div>
+                <button type="button" class="btn pull-right btn-danger" onclick="getUploadList()">검색</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-fixed">
+                    <thead>
+                    <tr>
+                        <th class="text-center">인덱스</th>
+                        <th class="text-center">업로드파일명</th>
+                        <th class="text-center">파일크기</th>
+                        <th class="text-center">생성일</th>
+                        <th class="text-center">생성자</th>
+                        <th class="text-center">삭제구분</th>
+                        <th class="text-center">저장시작시간</th>
+                        <th class="text-center">저장완료시간</th>
+                        <th class="text-center">저장된테이블</th>
+                        <th class="text-center">저장완료여부</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+//    getUserList(1);
+    getUploadList(1);
+</script>
+
+</body>
+</html>

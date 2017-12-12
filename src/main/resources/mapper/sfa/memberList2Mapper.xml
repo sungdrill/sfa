@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.MemberList2Mapper">
+    <select id="selectMemberList2Count" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT SALES_MANAGER_CODE,
+        SALES_MANAGER_NAME,
+        TEAM_CODE,
+        (select code_name from G_CODE_LIST where CODE_ID = team_code) as team_name,
+        AREA_CODE,
+        (select code_name from G_CODE_LIST where CODE_ID = AREA_CODE) as area_name,
+        RANK_CODE,
+        (select code_name from G_CODE_LIST where CODE_ID = RANK_CODE) as rank_name,
+        PHONE_NUMBER,
+        CELL_PHONE_NUMBER,
+        ZIP_CODE,
+        ADDRESS,
+        DETAIL_ADDRESS,
+        REMARKS,
+        CREA_ID,
+        CREA_DATE
+        from G_MEMBER_LIST
+        WHERE 1=1
+        <if test="searchSalesManagerName !=null and searchSalesManagerName !=''">
+            AND SALES_MANAGER_NAME LIKE '%' + #{searchSalesManagerName} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+    <select id="selectMemberList2" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT ROW_NUMBER() OVER (ORDER BY isnull((select sort from G_CODE_LIST where CODE_ID = team_code), 999) ASC, isnull((select sort from G_CODE_LIST where CODE_ID = AREA_CODE), 999) ASC, isnull((select sort from G_CODE_LIST where CODE_ID = RANK_CODE), 999) ASC, SALES_MANAGER_CODE ASC) num,
+        SALES_MANAGER_CODE AS salesManagerCode,
+        SALES_MANAGER_NAME AS salesManagerName,
+        TEAM_CODE AS teamCode,
+        isnull((select code_name from G_CODE_LIST where CODE_ID = team_code), '입력무') as teamName,
+        isnull((select sort from G_CODE_LIST where CODE_ID = team_code), 999) as teamSort,
+        AREA_CODE AS areaCode,
+        isnull((select code_name from G_CODE_LIST where CODE_ID = AREA_CODE), '입력무') as areaName,
+        isnull((select sort from G_CODE_LIST where CODE_ID = AREA_CODE), 999) as areaSort,
+        RANK_CODE AS rankCode,
+        isnull((select code_name from G_CODE_LIST where CODE_ID = RANK_CODE), '입력무') as rankName,
+        isnull((select sort from G_CODE_LIST where CODE_ID = RANK_CODE), 999) as rankSort,
+        PHONE_NUMBER AS phoneNumber,
+        CELL_PHONE_NUMBER AS cellPhoneNumber,
+        ZIP_CODE AS zipCode,
+        ADDRESS AS address,
+        DETAIL_ADDRESS AS detailAddress,
+        REMARKS AS remarks,
+        CREA_ID AS creaId,
+        CONVERT(VARCHAR(10),CREA_DATE, 120) AS creaDate
+        from G_MEMBER_LIST
+        WHERE 1=1
+        <if test="searchSalesManagerName !=null and searchSalesManagerName !=''">
+            AND SALES_MANAGER_NAME LIKE '%' + #{searchSalesManagerName} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

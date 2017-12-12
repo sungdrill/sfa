@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/memberList}">영업담당자(callnote)</a></h1>
+        </div>
+    </div>
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm" onsubmit="return false;">
+                <input type="hidden" name="pageNumber" id="pageNumber" />
+                <input type="hidden" name="callName" id="callName" value="getMemberList" />
+                <div class="form-group">
+                    <label for="name">이름</label>
+                    <input type="text" class="form-control" name="name" id="name" placeholder="이름" />
+                </div>
+                <button type="button" class="btn pull-right btn-danger" onclick="getMemberList()">검색</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-fixed">
+                    <thead>
+                    <tr>
+                        <th class="text-center">소속(팀)</th>
+                        <th class="text-center">소속(지역)</th>
+                        <th class="text-center">사번</th>
+                        <th class="text-center">이름</th>
+                        <th class="text-center">전화번호</th>
+                        <th class="text-center">휴대전화</th>
+                        <th class="text-center">우편번호</th>
+                        <th class="text-center">주소</th>
+                        <th class="text-center">상세주소</th>
+                        <th class="text-center">메모</th>
+                        <th class="text-center">직급</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+//    getUserList(1);
+    getMemberList(1);
+</script>
+
+</body>
+</html>

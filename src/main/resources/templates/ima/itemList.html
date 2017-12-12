@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>재고관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/ima/itemList}">품목관리 (ERP-월별재고현황)</a></h1>
+        </div>
+    </div>
+
+    <span id="more" style="cursor: pointer;" onclick="if(story.style.display=='none') {story.style.display='';$('#aaa').attr('class', 'glyphicon glyphicon-minus');} else {story.style.display='none';$('#aaa').attr('class', 'glyphicon glyphicon-plus');}"><span id="aaa" class="glyphicon glyphicon-plus" aria-hidden="true">엑셀업로드</span></span>
+    <div id="story" style="display: none">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="#"  method="post" class="form-inline" role="form" enctype="multipart/form-data" id="fileUploadForm">
+            <input type="hidden" id="boardIdx" name="boardIdx" value="001"/>
+            <div class="form-group">
+                <label for="fileVal">품목리스트 엑셀업로드</label>
+                <input type="file"  id="fileVal" name="file"/><br/>
+            </div>
+            <button type="submit" class="btn btn-danger" id="btnSubmit">업로드</button>
+        </form>
+        <div>
+            <p>| 품목코드 | 품목명 | 규격 | 재고단위 | 재고관리여부 |</p>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="alert alert-success" id="success-alert" style="display: none">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Success! </strong>
+        품목리스트 엑셀파일 업로드.
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+            <input type="hidden" name="pageNumber" id="pageNumber" />
+            <input type="hidden" name="callName" id="callName" value="getItemList" />
+            <div class="form-group">
+                <label for="itemCode">품목코드</label>
+                <input type="text" class="form-control" name="itemCode" id="itemCode" placeholder="품목코드" onkeydown="onKeyDown(this)" />
+            </div>
+            <div class="form-group">
+                <label for="itemName">품목명</label>
+                <input type="text" class="form-control" name="itemName" id="itemName" placeholder="품목명" onkeydown="onKeyDown(this)" />
+            </div>
+            <div class="form-group">
+                <label for="useYn">재고관리여부</label>
+                <select name="useYn" id="useYn" class="form-control">
+                    <option th:each="item : ${selectUseYn}"
+                            th:value="${item.value}"
+                            th:text="${item.key}">재고등록여부</option>
+                </select>
+            </div>
+            <button type="button" class="btn pull-right btn-danger" onclick="getItemList()">검색</button>
+        </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+            <button type="button" class="btn btn-warning btn-xs" id="btnUseY" onclick="useYnChecked('Y')" >재고등록</button>
+            <button type="button" class="btn btn-danger btn-xs" id="btnUseN" onclick="useYnChecked('N')" >재고해제</button>
+            <!--
+            <select name="year" id="year" class="form-control">
+                <option value="0">1년</option>
+                <option value="1">2년</option>
+                <option value="2">3년</option>
+                <option value="3">4년</option>
+                <option value="4">5년</option>
+            </select>
+            -->
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <button type="button" class="btn btn-primary" id="btnExcel" onclick="downloadExcel()" >엑셀다운로드</button>
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+            <table class="table table-bordered table-hover table-fixed">
+                <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="allCheckboxModule('check','checks[]')" id="check" /></th>
+                    <th class="text-center">품목코드</th>
+                    <th class="text-center">품목명</th>
+                    <th class="text-center">규격</th>
+                    <th class="text-center">재고단위</th>
+                    <th class="text-center">재고등록여부</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getItemList(1);
+
+    function onKeyDown(obj) {
+        if(event.keyCode == 13) {
+            getItemList(1);
+        }
+    }
+
+    function allCheckboxModule(id, name){
+        if($("#"+id).prop("checked")) {
+            //해당화면에 전체 checkbox들을 체크해준다
+            $("input[name='"+name+"']").prop("checked",true);
+            // 전체선택 체크박스가 해제된 경우
+        } else {
+            //해당화면에 모든 checkbox들의 체크를해제시킨다.
+            $("input[name='"+name+"']").prop("checked",false);
+        }
+    }
+
+    var useYnChecked = function(useYn){
+        var msg1 = '';
+        var msg2 = '';
+        var msg3 = '';
+        if (useYn === 'Y') {
+            msg1 = '재고관리 등록하시겠습니까?';
+            msg2 = '건의 주문을 정말 재고관리 등록하시겠습니까?';
+            msg3 = '등록하였습니다.'
+        } else {
+            msg1 = '재고관리 해제하시겠습니까?';
+            msg2 = '건의 주문을 정말 재고관리 해제하시겠습니까?';
+            msg3 = '해제하였습니다.'
+        }
+        if(!checkboxArrayValidate('checks[]')) return false;
+        if(!confirm(msg1)) return false;
+        var idx = '';
+        var j = 0;
+        $('input[name="checks[]"]').each(function(i,v){
+            if($(this).prop('checked')){
+                idx += (j===0 ? "'"+$(this).val()+"'" : ",'"+$(this).val()+"'");
+                j++;
+            }
+        });
+
+        var l = idx.split(',').length;
+        if(!confirm(l+msg2)){
+            return false;
+        }
+
+        $.ajax({
+            url:'/ima/itemUseYn.ajax',
+            type:'post',
+            data:{itemCodes:idx, useYn:useYn},
+            dataType:'json',
+            success:function(data){
+                if(data.size === l){
+                    alert(msg3);
+                    getItemList($("#pageNumber").val());
+//                    location.href='/ima/itemList';
+                }else{
+                    alert(msg3);
+                    return false;
+                }
+            },
+            error:function(error){
+                console.log(error);
+            }
+        });
+    };
+
+    $(function () {
+        $("#year").change(function () {
+            $("#year").val(this.value);
+        });
+    })
+</script>
+
+</body>
+</html>

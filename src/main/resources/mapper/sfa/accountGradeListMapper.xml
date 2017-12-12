@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.AccountGradeListMapper">
+    <select id="selectAccountGradeListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT  AGL.ACCOUNT_CODE AS accountCode,
+        AIL.ACCOUNT_NAME AS accountName,
+        AGL.GRADE_CODE AS gradeCode,
+        CL.CODE_NAME AS gradeName,
+        GODOMOLL_YN AS godomollYn
+        FROM G_ACCOUNT_GRADE_LIST AGL
+        JOIN E_ACCOUNT_INFO_LIST AIL on AGL.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+        <if test="searchAccountName !=null and searchAccountName !=''">
+            AND AIL.ACCOUNT_NAME LIKE '%' + #{searchAccountName} + '%'
+        </if>
+        JOIN G_CODE_LIST CL ON CL.CODE_ID = AGL.GRADE_CODE AND CL.GROUP_CODE_ID = 'GRADE'
+        <if test="searchAccountGrade !=null and searchAccountGrade !=''">
+            AND CL.CODE_ID = #{searchAccountGrade}
+        </if>
+        WHERE 1=1
+        <if test="searchAccountCode !=null and searchAccountCode !=''">
+            AND AGL.ACCOUNT_CODE LIKE '%' + #{searchAccountCode} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectAccountGradeList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY AGL.ACCOUNT_CODE ASC) num,
+        AGL.ACCOUNT_CODE AS accountCode,
+        AIL.ACCOUNT_NAME AS accountName,
+        AGL.GRADE_CODE AS gradeCode,
+        CL.CODE_NAME AS gradeName,
+        GODOMOLL_YN AS godomollYn
+        FROM G_ACCOUNT_GRADE_LIST AGL
+        JOIN E_ACCOUNT_INFO_LIST AIL on AGL.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+        <if test="searchAccountName !=null and searchAccountName !=''">
+            AND AIL.ACCOUNT_NAME LIKE '%' + #{searchAccountName} + '%'
+        </if>
+        JOIN G_CODE_LIST CL ON CL.CODE_ID = AGL.GRADE_CODE AND CL.GROUP_CODE_ID = 'GRADE'
+        <if test="searchAccountGrade !=null and searchAccountGrade !=''">
+            AND CL.CODE_ID = #{searchAccountGrade}
+        </if>
+        WHERE 1=1
+        <if test="searchAccountCode !=null and searchAccountCode !=''">
+            AND AGL.ACCOUNT_CODE LIKE '%' + #{searchAccountCode} + '%'
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

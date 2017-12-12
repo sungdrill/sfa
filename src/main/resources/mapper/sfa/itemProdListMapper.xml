@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ItemProdListMapper">
+    <select id="selectItemProdListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT  IPL.ITEM_CODE, IML.ITEM_NAME, IPL.PROD_CODE, PML.PROD_NAME, IPL.MAPPING_DATE
+          FROM  I_ITEM_PROD_LIST IPL
+        INNER JOIN I_ITEM_MASTER_LIST IML ON IPL.ITEM_CODE = IML.ITEM_CODE
+        INNER JOIN I_PROD_MASTER_LIST PML ON IPL.PROD_CODE = PML.PROD_CODE
+        WHERE 1=1
+        <if test="searchItemCode !=null and searchItemCode !=''">
+            AND IPL.ITEM_CODE LIKE '%' + #{searchItemCode} + '%'
+        </if>
+        <if test="searchItemName !=null and searchItemName !=''">
+            AND IML.ITEM_NAME LIKE '%' + #{searchItemName} + '%'
+        </if>
+        <if test="searchUseYn !=null and searchUseYn !=''">
+            AND IML.USE_YN = #{searchUseYn}
+        </if>
+        <if test="searchProdCode !=null and searchProdCode !=''">
+            AND IPL.PROD_CODE LIKE '%' + #{searchProdCode} + '%'
+        </if>
+        <if test="searchProdName !=null and searchProdName !=''">
+            AND PML.PROD_NAME LIKE '%' + #{searchProdName} + '%'
+        </if>
+        <if test="searchMappingDate !=null and searchMappingDate !=''">
+            AND IPL.MAPPING_DATE = #{searchMappingDate}
+        </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectItemProdList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+        SELECT  ROW_NUMBER() OVER (ORDER BY IPL.ITEM_CODE ASC, IPL.MAPPING_DATE ASC) NUM,
+                IPL.ITEM_CODE AS itemCode,
+                IML.ITEM_NAME AS itemName,
+                IML.USE_YN  AS useYn,
+                IPL.PROD_CODE AS prodCode,
+                PML.PROD_NAME AS prodName,
+                CONVERT(VARCHAR(7),IPL.MAPPING_DATE, 120) AS mappingDate
+          FROM  I_ITEM_PROD_LIST IPL
+        INNER JOIN I_ITEM_MASTER_LIST IML ON IPL.ITEM_CODE = IML.ITEM_CODE
+        INNER JOIN I_PROD_MASTER_LIST PML ON IPL.PROD_CODE = PML.PROD_CODE
+        WHERE 1=1
+        <if test="searchItemCode !=null and searchItemCode !=''">
+            AND IPL.ITEM_CODE LIKE '%' + #{searchItemCode} + '%'
+        </if>
+        <if test="searchItemName !=null and searchItemName !=''">
+            AND IML.ITEM_NAME LIKE '%' + #{searchItemName} + '%'
+        </if>
+        <if test="searchUseYn !=null and searchUseYn !=''">
+            AND IML.USE_YN = #{searchUseYn}
+        </if>
+        <if test="searchProdCode !=null and searchProdCode !=''">
+            AND IPL.PROD_CODE LIKE '%' + #{searchProdCode} + '%'
+        </if>
+        <if test="searchProdName !=null and searchProdName !=''">
+            AND PML.PROD_NAME LIKE '%' + #{searchProdName} + '%'
+        </if>
+        <if test="searchMappingDate !=null and searchMappingDate !=''">
+            AND IPL.MAPPING_DATE = #{searchMappingDate}
+        </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

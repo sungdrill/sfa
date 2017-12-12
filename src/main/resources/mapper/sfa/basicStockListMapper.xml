@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.BasicStockListMapper">
+    <select id="selectBasicStockListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+            SELECT            A.PROD_CODE AS prodCode
+                            , C.PROD_NAME AS prodName
+                            , A.PROD_TYPE_GSP AS prodTypeGsp
+                            , A.PROD_PRIORITY AS prodPriority
+                            , B.ITEM_CODE AS itemCode
+            FROM I_PROD_PRIORITY A
+            LEFT OUTER JOIN I_ITEM_PROD_LIST B ON A.PROD_CODE = B.PROD_CODE
+            LEFT OUTER JOIN I_PROD_MASTER_LIST C ON A.PROD_CODE = C.PROD_CODE
+            WHERE 1=1
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectBasicStockList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+                SELECT  ROW_NUMBER() OVER (ORDER BY A.PROD_TYPE_GSP ASC, A.PROD_PRIORITY ASC) NUM
+                        , A.PROD_CODE AS prodCode
+                        , C.PROD_NAME AS prodName
+                        , A.PROD_TYPE_GSP AS prodTypeGsp
+                        , A.PROD_PRIORITY AS prodPriority
+                        , B.ITEM_CODE AS itemCode
+                FROM I_PROD_PRIORITY A
+                LEFT OUTER JOIN I_ITEM_PROD_LIST B ON A.PROD_CODE = B.PROD_CODE
+                LEFT OUTER JOIN I_PROD_MASTER_LIST C ON A.PROD_CODE = C.PROD_CODE
+                WHERE 1=1
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+
+</mapper>

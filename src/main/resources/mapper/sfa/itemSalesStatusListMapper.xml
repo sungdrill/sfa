@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ItemSalesStatusListMapper">
+    <select id="selectItemSalesStatusList" parameterType="Map" resultType="Map">
+        select
+                    ISNULL(NUM, 9999) AS num,
+                    isnull(team_orders, 7777) as teamOrders,
+                    isnull(MAX(TEAM_CD),'') as teamCd,
+                    isnull(MAX(TEAM_NM),'') as teamNm,
+                    isnull(MAX(AREA_CD),'') as areaCd,
+                    isnull(MAX(AREA_NM),'') as areaNm,
+                    MAX(ID) as id,
+                    MAX(name) as name,
+            isnull(sum(totalBBB),0) as totalBBB, -- 듀오자임 플러스
+            isnull(sum(totalCCC),0) as totalCCC,  -- 듀오락12
+            isnull(sum(totalDDD),0) as totalDDD,  -- 키즈
+            isnull(sum(totalEEE),0) as totalEEE, -- 듀오락스탑
+            ISNULL(SUM(totalIbs),0) as totalIbs, --아이비에스 소계
+            isnull(sum(totalFFF),0) as totalFFF, -- 듀오락스탑
+            isnull(sum(totalGGG),0) as totalGGG, -- 듀오락스탑
+            ISNULL(SUM(totalAtp),0) as totalAtp, -- 에이티피 소계
+            isnull(sum(totalHHH),0) as totalHHH, -- 듀오락스탑
+            isnull(sum(totalIII),0) as totalIII, -- 듀오락스탑
+            ISNULL(SUM(totalGold),0) as totalGold, -- 골드 소계
+            isnull(sum(totalJJJ),0) as totalJJJ, -- 골드 세트(130포)[DG008A]
+            isnull(sum(totalKKK),0) as totalKKK, -- 골드 본품(60포)-리뉴얼[DG008B]
+            isnull(sum(totalLLL),0) as totalLLL, -- 골드 본품(60포)[DG001B]
+            isnull(sum(totalBaby),0) as totalBaby, -- 베이비 소계
+            isnull(sum(totalMMM),0) as totalMMM, -- 베이비 세트(120포)[DG010A]
+            isnull(sum(totalNNN),0) as totalNNN, -- 베이비 본품(60포)[DG010B]
+            isnull(sum(totalOOO),0) as totalOOO, -- 얌얌[DT003A]
+            isnull(sum(totalCare),0) as totalCare, -- 케어 소계
+            isnull(sum(totalPPP),0) as totalPPP, -- 케어 본품(60C)-리뉴얼[DC008A]
+            isnull(sum(totalQQQ),0) as totalQQQ -- 케어 본품(60C)[DC003A]
+        from (
+                select ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                x.team_orders as team_orders,
+                x.TEAM_CD as TEAM_CD,
+                x.TEAM_NM as TEAM_NM,
+                x.AREA_CD as AREA_CD,
+                x.AREA_NM as AREA_NM,
+                x.ID as id,
+                x.name as name,
+                X.totalBBB as totalBBB,
+                X.totalCCC as totalCCC,
+                X.totalDDD as totalDDD,
+                X.totalEEE as totalEEE,
+            (X.totalGGG + X.totalFFF) AS totalIbs,
+            X.totalFFF as totalFFF,
+            X.totalGGG as totalGGG,
+            (X.totalIII + X.totalHHH) AS totalAtp,
+            X.totalHHH as totalHHH,
+            X.totalIII as totalIII,
+            (X.totalJJJ + X.totalKKK + X.totalLLL) as totalGold,
+            X.totalJJJ as totalJJJ,
+            X.totalKKK as totalKKK,
+            X.totalLLL as totalLLL,
+            (X.totalMMM + X.totalNNN) AS totalBaby,
+            X.totalMMM as totalMMM,
+            X.totalNNN as totalNNN,
+            X.totalOOO as totalOOO,
+            (X.totalPPP + X.totalQQQ) AS totalCare,
+            X.totalPPP as totalPPP,
+            X.totalQQQ as totalQQQ
+                from (
+                select	--ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                isnull(aaa.team_orders, 99) as team_orders,
+                isnull(AAA.AREA_ORDERS, 99) as AREA_ORDERS,
+                isnull(aaa.posi_orders, 99) as posi_orders,
+                aaa.TEAM_CD as TEAM_CD,
+                aaa.TEAM_NM as TEAM_NM,
+                isnull(aaa.AREA_CD, '') as AREA_CD,
+                isnull(aaa.AREA_NM, '') as AREA_NM,
+                aaa.ID as id,
+                aaa.name as name,
+                isnull(BBB.totalBBB,0) as totalBBB,
+                isnull(CCC.totalCCC,0) as totalCCC,
+                isnull(DDD.totalDDD,0) as totalDDD,
+                isnull(EEE.totalEEE,0) as totalEEE,
+                isnull(FFF.totalFFF,0) as totalFFF,
+                isnull(GGG.totalGGG,0) as totalGGG,
+                isnull(HHH.totalHHH,0) as totalHHH,
+                isnull(III.totalIII,0) as totalIII,
+                isnull(JJJ.totalIII,0) as totalJJJ,
+                isnull(KKK.totalIII,0) as totalKKK,
+                isnull(LLL.totalIII,0) as totalLLL,
+                isnull(MMM.totalIII,0) as totalMMM,
+                isnull(NNN.totalIII,0) as totalNNN,
+                isnull(OOO.totalIII,0) as totalOOO,
+                isnull(PPP.totalIII,0) as totalPPP,
+                isnull(QQQ.totalIII,0) as totalQQQ
+                from
+                (
+                select
+                TEAM_CODE AS team_cd,
+                CL.CODE_NAME AS team_nm,
+                CL.SORT AS TEAM_ORDERs,
+                AREA_CODE as area_cd,
+                area.CODE_NAME as area_nm,
+                area.SORT as AREA_ORDERS,
+                Rank_code as rank_cd,
+                rankk.CODE_NAME AS RANK_NM,
+                rankk.SORT as posi_orders,
+                SALES_MANAGER_CODE as id,
+                SALES_MANAGER_NAME AS name
+                from G_MEMBER_LIST ML
+                left outer  join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+                left outer  join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+                left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE
+                ) AAA
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalBBB
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DC002A'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) BBB
+                on AAA.id = BBB.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalCCC
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DC006A'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) CCC
+                on AAA.id = CCC.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalDDD
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DG011A'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) DDD
+                on AAA.id = DDD.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalEEE
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DC001A'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) EEE
+                on AAA.id = EEE.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalFFF
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DC004E'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) FFF
+                on AAA.id = FFF.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalGGG
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DE004F'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) GGG
+                on AAA.id = GGG.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalHHH
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DG002F'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) HHH
+                on AAA.id = HHH.SALES_MANAGER_CODE
+                left outer join
+                (
+                        select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+                        from (
+                        select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+                        from
+                        (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                        from E_SALES_DEADLINE_LIST
+                        where 1=1
+                        and ITEM_CODE = 'DG002G'
+                        and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                        group by ACCOUNT_CODE, ITEM_CODE ) BB
+                        LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                        ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+                        and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                        ) ZZ
+                        group by SALES_MANAGER_CODE, ITEM_CODE
+                ) III
+                on AAA.id = III.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DG008A'	--골드세트(130포)
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) JJJ
+            on AAA.id = JJJ.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DG008B' --골드본품(60포)-리뉴얼
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) KKK
+            on AAA.id = KKK.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DG001B' --골드본품(60포)
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) LLL
+            on AAA.id = LLL.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DG010A' --베이비세트(120포)
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) MMM
+            on AAA.id = MMM.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DG010B' -- 베이비본품(60포)
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) NNN
+            on AAA.id = NNN.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DT003A' --얌얌
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) OOO
+            on AAA.id = OOO.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DC008A' --케어본품(60C)-리뉴얼
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) PPP
+            on AAA.id = PPP.SALES_MANAGER_CODE
+            left outer join
+            (
+            select SALES_MANAGER_CODE, ITEM_CODE, SUM(total) as totalIII
+            from (
+            select BB.ACCOUNT_CODE, BB.ITEM_CODE, BB.total, MAIML.SALES_MANAGER_CODE
+            from
+            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+            from E_SALES_DEADLINE_LIST
+            where 1=1
+            and ITEM_CODE = 'DC003A' --케어본품(60C)
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by ACCOUNT_CODE, ITEM_CODE ) BB
+            LEFT OUTER JOIN G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            ON MAIML.ACCOUNT_CODE = BB.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) ZZ
+            group by SALES_MANAGER_CODE, ITEM_CODE
+            ) QQQ
+            on AAA.id = QQQ.SALES_MANAGER_CODE
+
+            union
+                select	--ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                99 as team_orders,
+                99 as AREA_ORDERS,
+                99 as posi_orders,
+                '' as TEAM_CD,
+                '기타' as TEAM_NM,
+                '' as AREA_CD,
+                '' as AREA_NM,
+                '' as id,
+                '기타담당자' as name,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DC002A'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ) ,0) as totalBBB,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DC006A'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalCCC,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DG011A'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalDDD,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DC001A'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalEEE,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DC004E'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalFFF,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DE004F'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalGGG,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DG002F'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalHHH,
+                isnull((
+                    select sum(total) as total
+                    from
+                            (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                            from E_SALES_DEADLINE_LIST
+                            where 1=1
+                            and ITEM_CODE = 'DG002G'
+                            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                            and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                            group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalIII,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DG008A' --골드세트(130포)
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalJJJ,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DG008B' -- 골드 본품(60포)-리뉴얼
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalKKK,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DG001B' --골드 본품(60포)
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalLLL,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DG010A' --베이비세트(120포)
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalMMM,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DG010B' --베이비 본품(60포)
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalNNN,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DT003A' --얌얌
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalOOO,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DC008A' --케어 본품(60C)리뉴얼
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalPPP,
+                    isnull((
+                    select sum(total) as total
+                    from
+                    (select ACCOUNT_CODE, ITEM_CODE, SUM(amount) AS total
+                    from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and ITEM_CODE = 'DC003A' --케어 본품(60C)
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    and ACCOUNT_CODE not in (select ACCOUNT_CODE from G_MEMBER_ACCOUNT_INFO_MANAGER_LIST where MANAGER_START_DATE = #{startSearchDate})
+                    group by ACCOUNT_CODE, ITEM_CODE ) x
+                    group by ITEM_CODE ),0) as totalQQQ
+            ) X
+        ) XX
+        -- where 1=1
+        <!--<if test="salesManagerName !=null and salesManagerName !=''">-->
+          <!--AND ID LIKE '%' + #{salesManagerName} + '%'-->
+        <!--</if>-->
+        GROUP BY ROLLUP(TEAM_ORDERS, num)
+    </select>
+</mapper>

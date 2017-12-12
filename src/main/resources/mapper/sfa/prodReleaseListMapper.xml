@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ProdReleaseListMapper">
+    <select id="selectProdReleaseList" parameterType="Map" resultType="Map">
+        SELECT ITEM_CODE, SUM(AAA) AS dQt, SUM(CCC) AS dSum, SUM(BBB) AS eQt, SUM(DDD) AS eSum
+        FROM (
+            SELECT ITEM_CODE,
+            CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+            CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+            CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+            CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+            FROM (
+                SELECT IPL.ITEM_CODE, 'DUOLAC' AS MALL_CODE, DR.PROD_QTY, 'DUOLAC' AS MALL_SITE, DR.SALES_PRICE_SUM FROM I_DUOLAC_RELEASE DR
+                INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = DR.PROD_CODE
+                WHERE 1=1
+                <![CDATA[
+                AND  RELEASE_DATE >=LEFT(#{searchDateInput}, 6)+'01'
+                AND RELEASE_DATE <= #{searchDateInput}
+                ]]>
+
+                UNION ALL
+
+                SELECT IPL.ITEM_CODE, PRL.MALL_CODE, PRL.PROD_QTY, PRL.MALL_SITE, 0 AS SALES_PRICE_SUM  FROM I_PROD_RELEASE_LIST PRL
+                INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = PRL.PROD_CODE
+                WHERE 1=1
+                <![CDATA[
+                AND  UPDATE_DATE >=LEFT(#{searchDateInput}, 6)+'01'
+                AND UPDATE_DATE <= #{searchDateInput}
+                ]]>
+                AND PRL.MALL_SITE = 'EXMALL'
+            ) A
+            GROUP BY ITEM_CODE, MALL_SITE
+        ) AA
+        GROUP BY ITEM_CODE
+    </select>
+
+    <select id="selectProdReleaseDetailList" parameterType="Map" resultType="Map">
+        SELECT  CD_ITEM AS ITEM_CODE
+              , YY_INV AS YY_INV
+              , YM_IO AS UPDATE_DATE
+              , SUM(QT_DELIVERY) AS qt
+              , SUM(QT_DUOLAC) AS dQt
+              , SUM(QT_EXMALL) AS eQt
+        FROM I_PROD_INV
+        WHERE 1=1
+        <![CDATA[
+        AND (CD_ITEM >= #{itemCode} OR #{itemCode}   = '' OR #{itemCode}   IS NULL)
+        AND (CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        ]]>
+        GROUP BY CD_ITEM, YY_INV, YM_IO
+    </select>
+
+    <select id="selectProdReleaseDetailList2" parameterType="Map" resultType="Map">
+        SELECT  REPLACE(UPDATE_DATE, '-', '') UPDATE_DATE,
+                ITEM_CODE,
+                SUM(AAA) AS dQt,
+                SUM(CCC) AS dSum,
+                SUM(BBB) AS eQt,
+                SUM(DDD) AS eSum
+        FROM (
+            SELECT UPDATE_DATE,
+            ITEM_CODE,
+            CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+            CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+            CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+            CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+            FROM (
+                SELECT LEFT(RELEASE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, 'DUOLAC' MALL_CODE, DR.PROD_QTY, 'DUOLAC' MALL_SITE, DR.SALES_PRICE_SUM FROM I_DUOLAC_RELEASE DR
+                INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = DR.PROD_CODE
+                WHERE 1=1
+        <![CDATA[
+                AND  RELEASE_DATE >=CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1) + '0101'
+                AND RELEASE_DATE <= #{searchDateInput}
+                AND (ITEM_CODE >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+                AND (ITEM_CODE <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        ]]>
+
+                UNION ALL
+
+                SELECT LEFT(UPDATE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, PRL.MALL_CODE, PRL.PROD_QTY, PRL.MALL_SITE, 0 AS SALES_PRICE_SUM  FROM I_PROD_RELEASE_LIST PRL
+                INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = PRL.PROD_CODE
+                WHERE 1=1
+        <![CDATA[
+                AND  UPDATE_DATE >=CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1) + '0101'
+                AND UPDATE_DATE <= #{searchDateInput}
+                AND PRL.MALL_SITE = 'EXMALL'
+                AND (ITEM_CODE >= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+                AND (ITEM_CODE <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
+        ]]>
+            ) A
+            GROUP BY UPDATE_DATE, ITEM_CODE, MALL_SITE
+        ) AA
+        GROUP BY UPDATE_DATE, ITEM_CODE
+    </select>
+</mapper>

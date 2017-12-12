@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.ImaListMapper">
+    <select id="selectImaListCount" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+            SELECT  IML.ITEM_CODE AS itemCode,
+                    IML.ITEM_NAME AS itemName,
+                    CONVERT(VARCHAR(7),IIIHL.UPDATE_DATE, 120) AS updateDate,
+                    IIIHL.BASIC_STOCK AS basicStock,
+                    IIIHL.IN_ITEM AS inItem,
+                    IIIHL.OUT_ITEM AS outItem,
+                    IIIHL.CLOSING_STOCK AS closingStock,
+                    IML.USE_YN AS useYn,
+                    OLL.orderDate AS orderDate,
+                    OLL.qty AS orderQty,
+                    OLL.unitPrice AS orderPrice,
+                    ISNULL(DUOLAC.UPDATE_DATE, '') AS duolacDate,
+                    ISNULL(DUOLAC.PROD_QTY, 0) AS duolacQty,
+                    ISNULL(DUOLAC.UNIT_PRICE, 0) AS duolacPrice,
+                    ISNULL(EXMALL.UPDATE_DATE, '') AS exmallDate,
+                    ISNULL(EXMALL.PROD_QTY, 0) AS exmallQty,
+                    ISNULL(EXMALL.UNIT_PRICE, 0) AS exmallPrice
+            FROM  I_ITEM_MASTER_LIST IML
+            LEFT OUTER JOIN (
+            SELECT  IHL.ITEM_CODE,
+            IHL.UPDATE_DATE,
+            IHL.BASIC_STOCK,
+            IHL.IN_ITEM,
+            IHL.OUT_ITEM,
+            IHL.CLOSING_STOCK
+            from I_ITEM_HISTORY_LIST IHL
+            INNER JOIN (
+            SELECT ITEM_CODE, MAX(UPDATE_DATE) AS UPDATE_DATE
+            FROM I_ITEM_HISTORY_LIST
+            GROUP BY ITEM_CODE
+            ) IIHL ON IHL.ITEM_CODE = IIHL.ITEM_CODE AND IHL.UPDATE_DATE = IIHL.UPDATE_DATE
+            ) IIIHL ON IML.ITEM_CODE = IIIHL.ITEM_CODE
+            LEFT OUTER JOIN (
+            SELECT		OL.itemCode,
+            OL.orderDate,
+            OL.qty,
+            OL.unitPrice
+            FROM		(
+            SELECT		ITEM_CODE AS itemCode,
+            CONVERT(VARCHAR(7),ORDER_DATE,120) AS orderDate,
+            SUM(QTY) AS qty,
+            MAX(UNIT_PRICE) AS unitPrice
+            FROM		E_ORDER_LIST
+            group by	ITEM_CODE, CONVERT(VARCHAR(7),ORDER_DATE,120)
+            ) OL
+            INNER JOIN (
+            SELECT		ITEM_CODE AS itemCode,
+            MAX(CONVERT(VARCHAR(7),ORDER_DATE,120)) AS orderDate
+            FROM		E_ORDER_LIST
+            GROUP BY	ITEM_CODE
+            ) OLDATE ON OL.itemCode = OLDATE.itemCode AND OL.orderDate = OLDATE.orderDate
+            ) OLL ON IML.ITEM_CODE = OLL.itemCode
+        LEFT OUTER JOIN (
+                            SELECT		PRL.PROD_CODE AS PROD_CODE,
+                            PRL.UPDATE_DATE AS UPDATE_DATE,
+                            PRL.PROD_QTY AS PROD_QTY,
+                            PRL.UNIT_PRICE AS UNIT_PRICE,
+                            IPL.ITEM_CODE AS ITEM_CODE
+                            FROM		(
+                                        (
+                                            SELECT		PROD_CODE,
+                                            CONVERT(VARCHAR(7), UPDATE_DATE, 120) AS UPDATE_DATE,
+                                            SUM(PROD_QTY) AS PROD_QTY,
+                                            MAX(UNIT_PRICE) AS UNIT_PRICE
+                                            FROM		I_PROD_RELEASE_LIST
+                                            WHERE		MALL_CODE = 'DUOLAC'
+                                            GROUP BY	PROD_CODE, CONVERT(VARCHAR(7), UPDATE_DATE, 120)
+                                        ) PRL
+                                        INNER JOIN
+                                        (
+                                            SELECT		PROD_CODE AS PROD_CODE,
+                                            MAX(CONVERT(VARCHAR(7), UPDATE_DATE, 120)) AS UPDATE_DATE
+                                            FROM		I_PROD_RELEASE_LIST
+                                            WHERE		MALL_CODE = 'DUOLAC'
+                                            GROUP BY	PROD_CODE
+                                        ) PRLDATE ON PRL.PROD_CODE = PRLDATE.PROD_CODE AND PRL.UPDATE_DATE = PRLDATE.UPDATE_DATE
+                                        LEFT OUTER JOIN I_ITEM_PROD_LIST IPL ON PRL.PROD_CODE = IPL.PROD_CODE
+                            )
+        ) DUOLAC ON DUOLAC.ITEM_CODE = IML.ITEM_CODE
+                        LEFT OUTER JOIN (
+                        SELECT		PRL.PROD_CODE AS PROD_CODE,
+                        PRL.UPDATE_DATE AS UPDATE_DATE,
+                        PRL.PROD_QTY AS PROD_QTY,
+                        PRL.UNIT_PRICE AS UNIT_PRICE,
+                        IPL.ITEM_CODE AS ITEM_CODE
+                        FROM		(
+                        (
+                        SELECT		PROD_CODE,
+                        CONVERT(VARCHAR(7), UPDATE_DATE, 120) AS UPDATE_DATE,
+                        SUM(PROD_QTY) AS PROD_QTY,
+                        MAX(UNIT_PRICE) AS UNIT_PRICE
+                        FROM		I_PROD_RELEASE_LIST
+                        WHERE		MALL_CODE <![CDATA[ <> ]]> 'DUOLAC'
+                        GROUP BY	PROD_CODE, CONVERT(VARCHAR(7), UPDATE_DATE, 120)
+                        ) PRL
+                        INNER JOIN
+                        (
+                        SELECT		PROD_CODE AS PROD_CODE,
+                        MAX(CONVERT(VARCHAR(7), UPDATE_DATE, 120)) AS UPDATE_DATE
+                        FROM		I_PROD_RELEASE_LIST
+                        WHERE		MALL_CODE <![CDATA[ <> ]]> 'DUOLAC'
+                        GROUP BY	PROD_CODE
+                        ) PRLDATE ON PRL.PROD_CODE = PRLDATE.PROD_CODE AND PRL.UPDATE_DATE = PRLDATE.UPDATE_DATE
+                        LEFT OUTER JOIN I_ITEM_PROD_LIST IPL ON PRL.PROD_CODE = IPL.PROD_CODE
+                        )
+                        ) EXMALL ON EXMALL.ITEM_CODE = IML.ITEM_CODE
+        WHERE 1=1
+        AND IML.USE_YN = 'Y'
+            <if test="itemCode !=null and itemCode !=''">
+                AND IML.ITEM_CODE LIKE '%' + #{itemCode} + '%'
+            </if>
+            <if test="itemName !=null and itemName !=''">
+                AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'
+            </if>
+            <if test="searchMappingDate !=null and searchMappingDate !=''">
+                AND IIIHL.UPDATE_DATE = #{searchMappingDate}
+            </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectImaList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+                SELECT  ROW_NUMBER() OVER (ORDER BY IML.ITEM_CODE ASC, IIIHL.UPDATE_DATE ASC) NUM,
+                        IML.ITEM_CODE AS itemCode,
+                        IML.ITEM_NAME AS itemName,
+                        CONVERT(VARCHAR(7),IIIHL.UPDATE_DATE, 120) AS updateDate,
+                        IIIHL.BASIC_STOCK AS basicStock,
+                        IIIHL.IN_ITEM AS inItem,
+                        IIIHL.OUT_ITEM AS outItem,
+                        IIIHL.CLOSING_STOCK AS closingStock,
+                        IML.USE_YN AS useYn,
+                        ISNULL(OLL.qty, 0) + ISNULL(DUOLAC.PROD_QTY, 0)  + ISNULL(EXMALL.PROD_QTY, 0) AS sumQty,
+                        ISNULL(OLL.orderDate,'') AS orderDate,
+                        ISNULL(OLL.qty, 0) AS orderQty,
+                        ISNULL(OLL.unitPrice, 0) AS orderPrice,
+                        ISNULL(DUOLAC.UPDATE_DATE, '') AS duolacDate,
+                        ISNULL(DUOLAC.PROD_QTY, 0) AS duolacQty,
+                        ISNULL(DUOLAC.UNIT_PRICE, 0) AS duolacPrice,
+                        ISNULL(EXMALL.UPDATE_DATE, '') AS exmallDate,
+                        ISNULL(EXMALL.PROD_QTY, 0) AS exmallQty,
+                        ISNULL(EXMALL.UNIT_PRICE, 0) AS exmallPrice
+                FROM  I_ITEM_MASTER_LIST IML
+                LEFT OUTER JOIN (
+                                    SELECT  IHL.ITEM_CODE,
+                                    IHL.UPDATE_DATE,
+                                    IHL.BASIC_STOCK,
+                                    IHL.IN_ITEM,
+                                    IHL.OUT_ITEM,
+                                    IHL.CLOSING_STOCK
+                                    from I_ITEM_HISTORY_LIST IHL
+                                    INNER JOIN (
+                                                    SELECT ITEM_CODE, MAX(UPDATE_DATE) AS UPDATE_DATE
+                                                    FROM I_ITEM_HISTORY_LIST
+                                                    GROUP BY ITEM_CODE
+                                    ) IIHL ON IHL.ITEM_CODE = IIHL.ITEM_CODE AND IHL.UPDATE_DATE = IIHL.UPDATE_DATE
+                ) IIIHL ON IML.ITEM_CODE = IIIHL.ITEM_CODE
+                LEFT OUTER JOIN (
+                                    SELECT		OL.itemCode,
+                                    OL.orderDate,
+                                    OL.qty,
+                                    OL.unitPrice
+                                    FROM		(
+                                                    SELECT		ITEM_CODE AS itemCode,
+                                                    CONVERT(VARCHAR(7),ORDER_DATE,120) AS orderDate,
+                                                    SUM(QTY) AS qty,
+                                                    MAX(UNIT_PRICE) AS unitPrice
+                                                    FROM		E_ORDER_LIST
+                                                    group by	ITEM_CODE, CONVERT(VARCHAR(7),ORDER_DATE,120)
+                                                ) OL
+                                    INNER JOIN (
+                                                    SELECT		ITEM_CODE AS itemCode,
+                                                    MAX(CONVERT(VARCHAR(7),ORDER_DATE,120)) AS orderDate
+                                                    FROM		E_ORDER_LIST
+                                                    GROUP BY	ITEM_CODE
+                                    ) OLDATE ON OL.itemCode = OLDATE.itemCode AND OL.orderDate = OLDATE.orderDate
+                ) OLL ON IML.ITEM_CODE = OLL.itemCode
+                LEFT OUTER JOIN (
+                    SELECT		PRL.PROD_CODE AS PROD_CODE,
+                    PRL.UPDATE_DATE AS UPDATE_DATE,
+                    PRL.PROD_QTY AS PROD_QTY,
+                    PRL.UNIT_PRICE AS UNIT_PRICE,
+                    IPL.ITEM_CODE AS ITEM_CODE
+                    FROM		(
+                                (
+                                    SELECT		PROD_CODE,
+                                    CONVERT(VARCHAR(7), UPDATE_DATE, 120) AS UPDATE_DATE,
+                                    SUM(PROD_QTY) AS PROD_QTY,
+                                    MAX(UNIT_PRICE) AS UNIT_PRICE
+                                    FROM		I_PROD_RELEASE_LIST
+                                    WHERE		MALL_CODE = 'DUOLAC'
+                                    GROUP BY	PROD_CODE, CONVERT(VARCHAR(7), UPDATE_DATE, 120)
+                                ) PRL
+                                INNER JOIN
+                                (
+                                    SELECT		PROD_CODE AS PROD_CODE,
+                                    MAX(CONVERT(VARCHAR(7), UPDATE_DATE, 120)) AS UPDATE_DATE
+                                    FROM		I_PROD_RELEASE_LIST
+                                    WHERE		MALL_CODE = 'DUOLAC'
+                                    GROUP BY	PROD_CODE
+                                ) PRLDATE ON PRL.PROD_CODE = PRLDATE.PROD_CODE AND PRL.UPDATE_DATE = PRLDATE.UPDATE_DATE
+                                LEFT OUTER JOIN I_ITEM_PROD_LIST IPL ON PRL.PROD_CODE = IPL.PROD_CODE
+                    )
+                ) DUOLAC ON DUOLAC.ITEM_CODE = IML.ITEM_CODE
+                LEFT OUTER JOIN (
+                                    SELECT		PRL.PROD_CODE AS PROD_CODE,
+                                    PRL.UPDATE_DATE AS UPDATE_DATE,
+                                    PRL.PROD_QTY AS PROD_QTY,
+                                    PRL.UNIT_PRICE AS UNIT_PRICE,
+                                    IPL.ITEM_CODE AS ITEM_CODE
+                                    FROM		(
+                                    (
+                                    SELECT		PROD_CODE,
+                                    CONVERT(VARCHAR(7), UPDATE_DATE, 120) AS UPDATE_DATE,
+                                    SUM(PROD_QTY) AS PROD_QTY,
+                                    MAX(UNIT_PRICE) AS UNIT_PRICE
+                                    FROM		I_PROD_RELEASE_LIST
+                                    WHERE		MALL_CODE <![CDATA[ <> ]]> 'DUOLAC'
+                                    GROUP BY	PROD_CODE, CONVERT(VARCHAR(7), UPDATE_DATE, 120)
+                                    ) PRL
+                                    INNER JOIN
+                                    (
+                                    SELECT		PROD_CODE AS PROD_CODE,
+                                    MAX(CONVERT(VARCHAR(7), UPDATE_DATE, 120)) AS UPDATE_DATE
+                                    FROM		I_PROD_RELEASE_LIST
+                                    WHERE		MALL_CODE <![CDATA[ <> ]]> 'DUOLAC'
+                                    GROUP BY	PROD_CODE
+                                    ) PRLDATE ON PRL.PROD_CODE = PRLDATE.PROD_CODE AND PRL.UPDATE_DATE = PRLDATE.UPDATE_DATE
+                                    LEFT OUTER JOIN I_ITEM_PROD_LIST IPL ON PRL.PROD_CODE = IPL.PROD_CODE
+                                    )
+                ) EXMALL ON EXMALL.ITEM_CODE = IML.ITEM_CODE
+        WHERE 1=1
+        AND IML.USE_YN = 'Y'
+            <if test="itemCode !=null and itemCode !=''">
+                AND IML.ITEM_CODE LIKE '%' + #{itemCode} + '%'
+            </if>
+            <if test="itemName !=null and itemName !=''">
+                AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'
+            </if>
+            <if test="searchMappingDate !=null and searchMappingDate !=''">
+                AND IIIHL.UPDATE_DATE = #{searchMappingDate}
+            </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <select id="selectImaListCount2" parameterType="Map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+            SELECT  IHL.ITEM_CODE AS itemCode,
+                    IML.ITEM_NAME AS itemName,
+                    CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) AS updateDate,
+                    IHL.BASIC_STOCK AS basicStock,
+                    IHL.IN_ITEM AS inItem,
+                    IHL.OUT_ITEM AS outItem,
+                    IHL.CLOSING_STOCK AS closingStock,
+                    ISNULL(OL.qty, 0) +ISNULL(DUOLAC.qty, 0)+ISNULL(EXMALL.qty, 0) AS qty,
+                    ISNULL(OL.qty, 0) AS qty1,
+                    ISNULL(OL.unitPrice,0) AS unitPrice1,
+                    ISNULL(DUOLAC.qty, 0) AS qty2,
+                    ISNULL(DUOLAC.unitPrice,0) AS unitPrice2,
+                    ISNULL(EXMALL.qty, 0) AS qty3,
+                    ISNULL(EXMALL.unitPrice,0) AS unitPrice3
+            FROM I_ITEM_HISTORY_LIST IHL
+            INNER JOIN I_ITEM_MASTER_LIST IML ON IHL.ITEM_CODE = IML.ITEM_CODE
+            LEFT OUTER JOIN (
+                SELECT	ITEM_CODE AS itemCode,
+                CONVERT(varchar(7),ORDER_DATE,120) AS orderDate,
+                SUM(QTY) AS qty,
+                MAX(UNIT_PRICE) AS unitPrice
+                FROM E_ORDER_LIST
+                GROUP BY ITEM_CODE, CONVERT(varchar(7),ORDER_DATE,120)
+            ) OL ON IHL.ITEM_CODE = OL.itemCode AND CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) = OL.orderDate
+            LEFT OUTER JOIN (
+                SELECT CONVERT(varchar(7),PRL.UPDATE_DATE,120) AS updateDate,
+                IPL.ITEM_CODE as itemCode,
+                PRL.PROD_CODE as prodCode,
+                SUM(PRL.prod_qty) as qty,
+                MAX(PRL.UNIT_PRICE) as unitPrice
+                FROM I_PROD_RELEASE_LIST PRL
+                INNER JOIN I_ITEM_PROD_LIST IPL ON PRL.PROD_CODE = IPL.PROD_CODE
+                AND PRL.MALL_site = 'DUOLAC'
+                GROUP BY CONVERT(varchar(7),PRL.update_DATE,120), PRL.prod_code, IPL.ITEM_CODE
+            ) DUOLAC ON IHL.ITEM_CODE = DUOLAC.itemCode AND CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) = DUOLAC.updateDate
+            LEFT OUTER JOIN (
+                SELECT CONVERT(varchar(7),PRL.UPDATE_DATE,120) as updateDate,
+                IPL.ITEM_CODE AS itemCode,
+                PRL.PROD_CODE AS prodCode,
+                SUM(PRL.prod_qty) as qty,
+                MAX(PRL.UNIT_PRICE) AS unitPrice
+                FROM I_PROD_RELEASE_LIST PRL
+                INNER JOIN I_ITEM_PROD_LIST IPL on PRL.PROD_CODE = IPL.PROD_CODE
+                AND PRL.MALL_site = 'EXMALL'
+                GROUP BY CONVERT(varchar(7),PRL.update_DATE,120), PRL.prod_code, IPL.ITEM_CODE
+            ) EXMALL ON IHL.ITEM_CODE = EXMALL.itemCode AND CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) = EXMALL.updateDate
+            WHERE 1=1
+            <if test="itemCode !=null and itemCode !=''">
+                AND IHL.ITEM_CODE LIKE '%' + #{itemCode} + '%'
+            </if>
+            <if test="itemName !=null and itemName !=''">
+                AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'
+            </if>
+            <if test="searchMappingDate !=null and searchMappingDate !=''">
+                AND IHL.UPDATE_DATE = #{searchMappingDate}
+            </if>
+        ) AA
+        WHERE 1=1
+    </select>
+
+    <select id="selectImaList2" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+            SELECT  ROW_NUMBER() OVER (ORDER BY IHL.ITEM_CODE ASC, IHL.UPDATE_DATE ASC) NUM,
+                    IHL.ITEM_CODE AS itemCode,
+                    IML.ITEM_NAME AS itemName,
+                    CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) AS updateDate,
+                    IHL.BASIC_STOCK AS basicStock,
+                    IHL.IN_ITEM AS inItem,
+                    IHL.OUT_ITEM AS outItem,
+                    IHL.CLOSING_STOCK AS closingStock,
+                    ISNULL(OL.qty, 0) +ISNULL(DUOLAC.qty, 0)+ISNULL(EXMALL.qty, 0) AS qty,
+                    ISNULL(OL.qty, 0) AS qty1,
+                    ISNULL(OL.unitPrice,0) AS unitPrice1,
+                    ISNULL(DUOLAC.qty, 0) AS qty2,
+                    ISNULL(DUOLAC.unitPrice,0) AS unitPrice2,
+                    ISNULL(EXMALL.qty, 0) AS qty3,
+                    ISNULL(EXMALL.unitPrice,0) AS unitPrice3
+            FROM I_ITEM_HISTORY_LIST IHL
+            INNER JOIN I_ITEM_MASTER_LIST IML ON IHL.ITEM_CODE = IML.ITEM_CODE
+            LEFT OUTER JOIN (
+                SELECT	ITEM_CODE AS itemCode,
+                CONVERT(varchar(7),ORDER_DATE,120) AS orderDate,
+                SUM(QTY) AS qty,
+                MAX(UNIT_PRICE) AS unitPrice
+                FROM E_ORDER_LIST
+                GROUP BY ITEM_CODE, CONVERT(varchar(7),ORDER_DATE,120)
+            ) OL ON IHL.ITEM_CODE = OL.itemCode AND CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) = OL.orderDate
+            LEFT OUTER JOIN (
+                SELECT CONVERT(varchar(7),PRL.UPDATE_DATE,120) AS updateDate,
+                IPL.ITEM_CODE as itemCode,
+                PRL.PROD_CODE as prodCode,
+                SUM(PRL.prod_qty) as qty,
+                MAX(PRL.UNIT_PRICE) as unitPrice
+                FROM I_PROD_RELEASE_LIST PRL
+                INNER JOIN I_ITEM_PROD_LIST IPL ON PRL.PROD_CODE = IPL.PROD_CODE
+                AND PRL.MALL_site = 'DUOLAC'
+                GROUP BY CONVERT(varchar(7),PRL.update_DATE,120), PRL.prod_code, IPL.ITEM_CODE
+            ) DUOLAC ON IHL.ITEM_CODE = DUOLAC.itemCode AND CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) = DUOLAC.updateDate
+            LEFT OUTER JOIN (
+                SELECT CONVERT(varchar(7),PRL.UPDATE_DATE,120) as updateDate,
+                IPL.ITEM_CODE AS itemCode,
+                PRL.PROD_CODE AS prodCode,
+                SUM(PRL.prod_qty) as qty,
+                MAX(PRL.UNIT_PRICE) AS unitPrice
+                FROM I_PROD_RELEASE_LIST PRL
+                INNER JOIN I_ITEM_PROD_LIST IPL on PRL.PROD_CODE = IPL.PROD_CODE
+                AND PRL.MALL_site = 'EXMALL'
+                GROUP BY CONVERT(varchar(7),PRL.update_DATE,120), PRL.prod_code, IPL.ITEM_CODE
+            ) EXMALL ON IHL.ITEM_CODE = EXMALL.itemCode AND CONVERT(VARCHAR(7),IHL.UPDATE_DATE, 120) = EXMALL.updateDate
+            WHERE 1=1
+            <if test="itemCode !=null and itemCode !=''">
+                AND IHL.ITEM_CODE LIKE '%' + #{itemCode} + '%'
+            </if>
+            <if test="itemName !=null and itemName !=''">
+                AND IML.ITEM_NAME LIKE '%' + #{itemName} + '%'
+            </if>
+            <if test="searchMappingDate !=null and searchMappingDate !=''">
+                AND IHL.UPDATE_DATE = #{searchMappingDate}
+            </if>
+        ) AA
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+</mapper>

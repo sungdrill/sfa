@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.neoe.CbtisBatchListMapper">
+    <select id="selectCbtisBatchList" parameterType="Map" resultType="Map">
+        SELECT CD_ITEM itemCode
+        , DT_SO dtSo
+        , 'ORDER' deliverType
+        , NO_SO AS noSo
+        , SEQ_SO AS seqSo
+        , QT_SO AS qtDelivery
+         FROM NEOE.V_SA_SOHL
+        WHERE 1=1
+        AND CD_PARTNER = '00546'
+        --				AND DT_SO >=CONVERT(NCHAR(6), LEFT(@P_DT, 4)) + '0101'
+        AND DT_SO = #{regDate}
+        ORDER BY NO_SO, SEQ_SO
+    </select>
+</mapper>

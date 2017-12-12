@@ -1,0 +1,323 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/zipAccountList}">행정구역 거래처 정보 관리</a></h1>
+        </div>
+    </div>
+
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="javascript:getZipAccountList(1);" method="post" class="form-inline" role="form" id="searchForm">
+                <input type="hidden" name="pageNumber" id="pageNumber" />
+                <input type="hidden" name="callName" id="callName" value="getZipAccountList" />
+                <div class="form-group">
+                    <label for="administrativeDistrictName">행정구역</label>
+                    <input type="text" class="form-control" name="administrativeDistrictName" id="administrativeDistrictName" placeholder="거래처" />
+                </div>
+                <button type="button" class="btn pull-right btn-danger" onclick="getZipAccountList(1)">검색</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <span class="label label-default" id="total-count"></span>
+        </div>
+        <div class="col-md-6">
+            <p class="text-right">
+                <!--<button type="button" class="btn btn-primary" id="btnExcel" onclick="location.href='/admin/codeListEdit'">등록</button>-->
+                <!--<button type="button" class="btn btn-primary" onclick="createMemberAccountInfo();">등록</button>-->
+            </p>
+        </div>
+    </div>
+
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-fixed">
+                    <thead>
+                    <tr>
+                        <th class="text-center">행정구역코드</th>
+                        <th class="text-center">행정구역</th>
+                        <th class="text-center">우편번호</th>
+                        <th class="text-center">주소</th>
+                        <th class="text-center">상세주소</th>
+                        <th class="text-center">거래처코드</th>
+                        <th class="text-center">거래처</th>
+                    </tr>
+                    </thead>
+                    <tbody id="adminDistrictAccountListBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<!-- Modal -->
+<div class="modal fade" id="createMemberAccountInfoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="#" method="post" id="createMemberAccountInfoModalForm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">영업담당자 거래처정보 등록</h4>
+            </div>
+            <div class="modal-body">
+                <!--<div class="row">-->
+                    <!--<div class="col-md-6 col-md-offset-3">-->
+                        <!--<form autocomplete="off" action="#" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post" class="form-horizontal" role="form">-->
+                            <input type="hidden" name="maimSeq" id="maimSeq" value="0" />
+                            <div class="form-group has-error">
+                                <label class="col-sm-3 control-label" for="accountCode">거래처코드</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="accountCode" id="accountCode" placeholder="거래처코드" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="accountName">거래처</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="accountName" id="accountName" placeholder="거래처" class="form-control" readonly="true" />
+                                </div>
+                            </div>
+
+                            <div class="form-group has-error">
+                                <label class="col-sm-3 control-label" for="salesManagerCode">영업담당자코드</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="salesManagerCode" id="salesManagerCode" placeholder="영업담당자코드" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="salesManagerName">영업담당자</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="salesManagerName" id="salesManagerName" placeholder="영업담당자" class="form-control" readonly="true" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="managerStartDate">담당시작일</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="managerStartDate" id="managerStartDate" placeholder="클릭해서 선택해주세요." class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" for="managerEndDate">담당종료일</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="managerEndDate" id="managerEndDate" placeholder="클릭해서 선택해주세요." class="form-control" />
+                                </div>
+                            </div>
+
+                <div class="alert alert-warnning" id="warnning-alert" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert">x</button>
+                    <strong>경고! </strong>
+                    <p id="warnning-message"></p>
+                </div>
+                            <!--<span th:utext="${successMessage}"></span>-->
+                        <!--</form>-->
+                    <!--</div>-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveMemberAccountInfo();" id="createMemberAccountInfoBtn">등록</button>
+                <button type="button" class="btn btn-danger pull-right" onclick="deleteMemberAccountInfo();" id="deleteMemberAccountInfoBtn" style="display: none">삭제</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+    </form>
+    </div>
+</div>
+<!-- modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="popupAccountInfoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="javascript:popupAccountInfoList(1);" method="post" id="popupAccountInfoForm">
+            <input type="hidden" name="relayGroupCode" id="relayGroupCode" value="" />
+            <input type="hidden" name="pageNumber2" id="pageNumber2" />
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">거래처정보</h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel-group">
+                    <div class="panel panel-primary">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="accountName2">거래처</label>
+                            <div class="col-sm-5">
+                                <input type="text" class="form-control" name="accountName2" id="accountName2" placeholder="거래처" />
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" class="btn  pull-right btn-danger" onclick="popupAccountInfoList(1)">검색</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed">
+                        <thead>
+                        <tr>
+                            <th class="text-center">거래처코드</th>
+                            <th class="text-center">거래처</th>
+                            <th class="text-center">거래처(약칭)</th>
+                            <th class="text-center">사업자등록번호</th>
+                            <th class="text-center">대표자명</th>
+                            <th class="text-center">주소</th>
+                            <th class="text-center">상세</th>
+                        </tr>
+                        </thead>
+                        <tbody id="popupAccountInfoBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-md-12 col-xs-12 text-center">
+                    <p id="pagination-popupAccountInfoModal" class="pagination-margin" align="center"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="popupMemberListModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" action="javascript:popupMemberList(1);" method="post" id="popupMemberListForm">
+            <input type="hidden" name="pageNumber3" id="pageNumber3" />
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">영업담당자</h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel-group">
+                    <div class="panel panel-primary">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="searchSalesManagerName">영업담당자</label>
+                            <div class="col-sm-5">
+                                <input type="text" class="form-control" name="searchSalesManagerName" id="searchSalesManagerName" placeholder="영업담당자" />
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" class="btn pull-right btn-danger" onclick="popupMemberList(1)">검색</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed">
+                        <thead>
+                        <tr>
+                            <th class="text-center">팀</th>
+                            <th class="text-center">지역</th>
+                            <th class="text-center">영업담당자</th>
+                            <th class="text-center">영업담당자코드</th>
+                            <th class="text-center">직급</th>
+                        </tr>
+                        </thead>
+                        <tbody id="popupMemberListBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-md-12 col-xs-12 text-center">
+                    <p id="pagination-popupMemberListModal" class="pagination-margin" align="center"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">닫기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- modal -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getZipAccountList(1);
+
+$('#accountCode').on('click', function (e) {
+    e.preventDefault();
+    $('#createMemberAccountInfoModal').modal('hide');
+    $('#popupAccountInfoModal').modal();
+    //accountName2
+    $('#popupAccountInfoModal').on('shown.bs.modal', function () {
+        $('#accountName2').focus()
+    });
+    popupAccountInfoList(1);
+});
+
+$('#accountCode').on('keyup', function (e) {
+    e.preventDefault();
+    $('#accountCode').val('');
+    $('#createMemberAccountInfoModal').modal('hide');
+    $('#popupAccountInfoModal').modal();
+    $('#popupAccountInfoModal').on('shown.bs.modal', function () {
+        $('#accountName2').focus()
+    });
+    popupAccountInfoList(1);
+});
+
+$('#salesManagerCode').on('click', function (e) {
+    e.preventDefault();
+    $('#createMemberAccountInfoModal').modal('hide');
+    $('#popupMemberListModal').modal();
+    //accountName2
+    $('#popupMemberListModal').on('shown.bs.modal', function () {
+        $('#searchSalesManagerName').focus()
+    });
+    popupMemberList(1);
+});
+
+$('#salesManagerCode').on('keyup', function (e) {
+    e.preventDefault();
+    $('#accountCode').val('');
+    $('#createMemberAccountInfoModal').modal('hide');
+    $('#popupMemberListModal').modal();
+    $('#popupMemberListModal').on('shown.bs.modal', function () {
+        $('#searchSalesManagerName').focus()
+    });
+    popupMemberList(1);
+});
+
+</script>
+
+</body>
+</html>

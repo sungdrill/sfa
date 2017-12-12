@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<div class="container-fluid" style="margin-top: 50px;">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <h1><a href="#" th:href="@{/admin/goalList}">담당자 목표 관리</a></h1>
+        </div>
+    </div>
+
+    <span id="more" style="cursor: pointer;" onclick="if(story.style.display=='none') {story.style.display='';$('#aaa').attr('class', 'glyphicon glyphicon-minus');} else {story.style.display='none';$('#aaa').attr('class', 'glyphicon glyphicon-plus');}"><span id="aaa" class="glyphicon glyphicon-plus" aria-hidden="true">엑셀업로드</span></span>
+    <div id="story" style="display: none">
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <form autocomplete="off" action="#"  method="post" class="form-inline" role="form" enctype="multipart/form-data" id="fileUploadForm">
+                <input type="hidden" id="boardIdx" name="boardIdx" value="666"/>
+                <div class="form-group">
+                    <label for="fileVal">담당자목표관리 엑셀업로드</label>
+                    <input type="file" id="fileVal" name="file"/><br/>
+                </div>
+                <button type="submit" class="btn btn-danger" id="btnSubmit">업로드</button>
+            </form>
+            <div>
+                <p>| 영업담당자코드 | 목표설정년도 | 목표1월 | 목표2월 | 목표3월 | 목표4월 | 목표5월 | 목표6월 | 목표7월 | 목표8월 | 목표9월 | 목표10월 | 목표11월 | 목표12월 |</p>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="alert alert-success" id="success-alert" style="display: none">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Success! </strong>
+        담당자목표관리 엑셀파일 업로드.
+    </div>
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+        <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+            <input type="hidden" name="pageNumber" id="pageNumber" />
+            <input type="hidden" name="callName" id="callName" value="getGoalList" />
+            <input type="hidden" name="saveName" id="saveName" value="saveGoalList" />
+            <div class="form-group">
+                <label for="salesManagerName">담당자</label>
+                <input type="text" class="form-control" name="salesManagerName" id="salesManagerName" placeholder="담당자" />
+            </div>
+            <div class="form-group">
+                <label for="searchYear">목표년도</label>
+                <input type="text" class="form-control" name="searchYear" id="searchYear" placeholder="yyyy" value="" />
+                <input type="hidden" name="goalYear" id="goalYear" value="" />
+            </div>
+            <button type="button" class="btn pull-right btn-danger" onclick="getGoalList()">검색</button>
+        </form>
+        </div>
+    </div>
+
+    <!--<div>-->
+        <!--<p class="text-right">-->
+            <!--<button type="button" class="btn btn-primary" id="btnSave" >저장</button>-->
+            <!--<button type="button" class="btn btn-primary" id="btnSave2" >저장</button>-->
+            <!--<button type="button" class="btn btn-primary" id="btnSave3" >저장</button>-->
+        <!--</p>-->
+    <!--</div>-->
+
+    <div class="panel-group" style="margin-top:20px">
+        <div class="panel panel-primary">
+            <div class="table-responsive">
+            <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="editForm">
+            <table class="table table-bordered table-hover table-fixed">
+                <thead>
+                <tr>
+                    <th rowspan="2" class="text-center">영업그룹</th>
+                    <th rowspan="2" class="text-center">지역</th>
+                    <th rowspan="2" class="text-center">사번</th>
+                    <th rowspan="2" class="text-center">담당자</th>
+                    <th rowspan="2" class="text-center function">저장</th>
+                    <th colspan="12" class="text-center">목표설정</th>
+                    <!--<th rowspan="2" class="text-center">등록자</th>-->
+                    <!--<th rowspan="2" class="text-center">등록일</th>-->
+                    <!--<th rowspan="2" class="text-center">수정자</th>-->
+                    <!--<th rowspan="2" class="text-center">수정일</th>-->
+                </tr>
+                <tr>
+                    <th class="text-center">목표1월</th>
+                    <th class="text-center">목표2월</th>
+                    <th class="text-center">목표3월</th>
+                    <th class="text-center">목표4월</th>
+                    <th class="text-center">목표5월</th>
+                    <th class="text-center">목표6월</th>
+                    <th class="text-center">목표7월</th>
+                    <th class="text-center">목표8월</th>
+                    <th class="text-center">목표9월</th>
+                    <th class="text-center">목표10월</th>
+                    <th class="text-center">목표11월</th>
+                    <th class="text-center">목표12월</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            </form>
+            </div>
+
+            <div class="alert alert-error" id="error-alert" style="display: none">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong class="error">Error! </strong>
+                <p id="error-message"></p>
+            </div>
+
+            <div class="col-md-12 col-xs-12 text-center page-margin">
+                <p id="pagination-here" class="pagination-margin" align="center"></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- /.container -->
+
+<div th:replace="fragments/footer :: footer"/>
+
+<script>
+    getGoalList(1);
+
+//    $("table").on('click','tr',function(e){
+//        e.preventDefault();
+//        var id = $(this).attr('value');
+//        alert(id);
+//        console.log($(this).find("[name='goal1']").val());
+//        var $form = $('#leagueForm');
+// set the input value
+//        $form.find('input').val(id);
+
+//        $form.submit();
+//    });
+
+//    $(".btn2").click(function (event) {
+//        event.preventDefault();
+//console.log($(this).val());
+        //stop submit the form, we will post it manually.
+//        event.preventDefault();
+
+//        fire_ajax_submit();
+
+//    });
+
+    var clickGoal = '';
+    $("table").on('click','td',function(e){
+        clickGoal = $(this).find("INPUT").val();
+        e.preventDefault();
+//        var id = $(this).attr('value');
+//        alert(id);
+console.log("click :: ");
+        $(this).find("INPUT").val('');
+//        var $form = $('#leagueForm');
+// set the input value
+//        $form.find('input').val(id);
+
+//        $form.submit();
+    });
+
+    $("table").on('blur','td',function(e){
+
+        e.preventDefault();
+//        var id = $(this).attr('value');
+//        alert(id);
+console.log("blur :: ");
+
+console.log($(this).find("INPUT").val() == '');
+if ($(this).find("INPUT").val() == '') {
+    console.log("blur :: if :: ");
+    $(this).find("INPUT").val(clickGoal);
+} else {
+
+}
+//        $(this).find("INPUT").val('');
+//        var $form = $('#leagueForm');
+// set the input value
+//        $form.find('input').val(id);
+
+//        $form.submit();
+    });
+
+    $("table").on('keyup','td',function(e){
+        e.preventDefault();
+//        var id = $(this).attr('value');
+//        alert(id);
+        console.log($(this).find("INPUT").val());
+        console.log(isNumeric($(this).find("INPUT").val()));
+        var temp = $(this).find("INPUT").val().replace(/,/g, "");
+        if (isNumeric(temp)) {
+            $(this).find("INPUT").val(comma(temp));
+        } else {
+            alert('숫자만 입력해주세요.');
+            $(this).find("INPUT").val(clickGoal);
+        }
+//        var $form = $('#leagueForm');
+// set the input value
+//        $form.find('input').val(id);
+
+//        $form.submit();
+    });
+
+
+</script>
+
+</body>
+</html>

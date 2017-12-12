@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.GoalListMapper">
+    <select id="selectGoalListCount" parameterType="Map" resultType="int">
+        select  count(*)
+        FROM (
+        select	TEAM_CODE AS team_cd,
+        CL.CODE_NAME AS team_nm,
+        CL.SORT AS TEAM_ORDERs,
+        AREA_CODE as area_cd,
+        area.CODE_NAME as area_nm,
+        area.SORT as AREA_ORDERS,
+        Rank_code as rank_cd,
+        rankk.CODE_NAME AS RANK_NM,
+        rankk.SORT as posi_orders,
+        SALES_MANAGER_CODE as id,
+        SALES_MANAGER_NAME AS name
+        from G_MEMBER_LIST ML
+        left outer join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+        left outer join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+        left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE
+        where 1=1
+        <if test="salesManagerName != null and salesManagerName != ''">
+            AND SALES_MANAGER_NAME like '%' + #{salesManagerName} + '%'
+        </if>
+        ) AA
+        LEFT OUTER JOIN (
+        SELECT SALES_MANAGER_CODE, GOAL_DATE, GOAL1, GOAL2,GOAL3,GOAL4,GOAL5,GOAL6,GOAL7,GOAL8,GOAL9,GOAL10,GOAL11,GOAL12
+        FROM SFA.DBO.B_SALES_MANAGER_GOAL
+        WHERE GOAL_DATE = #{searchYear}
+        ) BB ON AA.ID = BB.SALES_MANAGER_CODE
+    </select>
+
+    <select id="selectGoalList" parameterType="Map" resultType="com.cellbiotech.model.sfa.GoalListVO">
+        SELECT
+        *
+        FROM
+        (
+        select  ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+        AA.TEAM_CD AS TEAMCD,
+        AA.TEAM_NM AS TEAMNM,
+        AA.AREA_CD AS AREACD,
+        AA.AREA_NM AS AREANM,
+        AA.ID,
+        AA.NAME,
+--         BB.GOAL_DATE AS GOALDATE
+        ISNULL(BB.GOAL1,0) AS GOAL1,
+        ISNULL(BB.GOAL2,0) AS GOAL2,
+        ISNULL(BB.GOAL3,0) AS GOAL3,
+        ISNULL(BB.GOAL4,0) AS GOAL4,
+        ISNULL(BB.GOAL5,0) AS GOAL5,
+        ISNULL(BB.GOAL6,0) AS GOAL6,
+        ISNULL(BB.GOAL7,0) AS GOAL7,
+        ISNULL(BB.GOAL8,0) AS GOAL8,
+        ISNULL(BB.GOAL9,0) AS GOAL9,
+        ISNULL(BB.GOAL10,0) AS GOAL10,
+        ISNULL(BB.GOAL11,0) AS GOAL11,
+        ISNULL(BB.GOAL12,0) AS GOAL12
+        FROM (
+        select	TEAM_CODE AS team_cd,
+        CL.CODE_NAME AS team_nm,
+        CL.SORT AS TEAM_ORDERs,
+        AREA_CODE as area_cd,
+        area.CODE_NAME as area_nm,
+        area.SORT as AREA_ORDERS,
+        Rank_code as rank_cd,
+        rankk.CODE_NAME AS RANK_NM,
+        rankk.SORT as posi_orders,
+        SALES_MANAGER_CODE as id,
+        SALES_MANAGER_NAME AS name
+        from G_MEMBER_LIST ML
+        left outer join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+        left outer join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+        left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE
+        where 1=1
+        <if test="salesManagerName != null and salesManagerName != ''">
+            AND SALES_MANAGER_NAME like '%' + #{salesManagerName} + '%'
+        </if>
+        ) AA
+                  LEFT OUTER JOIN (
+                  SELECT SALES_MANAGER_CODE, GOAL_DATE, GOAL1, GOAL2,GOAL3,GOAL4,GOAL5,GOAL6,GOAL7,GOAL8,GOAL9,GOAL10,GOAL11,GOAL12
+                  FROM SFA.DBO.B_SALES_MANAGER_GOAL
+                  WHERE GOAL_DATE = #{searchYear}
+                  ) BB ON AA.ID = BB.SALES_MANAGER_CODE
+--                  ORDER BY CONVERT(INT,TEAM_ORDERS), CONVERT(INT,AREA_ORDERS), CONVERT(INT, POSI_ORDERS)
+        )XX
+        WHERE 1=1
+        <if test="startPageNum != null and startPageNum != ''">
+            AND NUM between #{startPageNum} AND  #{endPageNum}
+        </if>
+    </select>
+    
+    <update id="mergeGoalInfo" parameterType="Map">
+        MERGE INTO B_SALES_MANAGER_GOAL SMG
+          USING (SELECT #{id} AS ID, #{searchYear} AS SEARCHYEAR) TEMP
+          ON (SALES_MANAGER_CODE = TEMP.ID AND GOAL_DATE = TEMP.SEARCHYEAR)
+          WHEN MATCHED THEN
+          UPDATE SET
+            GOAL1 = #{goal1},
+            GOAL2 = #{goal2},
+            GOAL3 = #{goal3},
+            GOAL4 = #{goal4},
+            GOAL5 = #{goal5},
+            GOAL6 = #{goal6},
+            GOAL7 = #{goal7},
+            GOAL8 = #{goal8},
+            GOAL9 = #{goal9},
+            GOAL10 = #{goal10},
+            GOAL11 = #{goal11},
+            GOAL12 = #{goal12},
+            MOD_ID = #{user},
+            MOD_DATE = GETDATE()
+          WHEN NOT MATCHED THEN
+        INSERT (
+            SALES_MANAGER_CODE,
+            GOAL_DATE,
+            GOAL1,
+            GOAL2,
+            GOAL3,
+            GOAL4,
+            GOAL5,
+            GOAL6,
+            GOAL7,
+            GOAL8,
+            GOAL9,
+            GOAL10,
+            GOAL11,
+            GOAL12,
+            REG_DATE,
+            REG_ID
+       ) values (
+       #{id},
+       #{searchYear},
+       #{goal1},
+       #{goal2},
+       #{goal3},
+       #{goal4},
+       #{goal5},
+       #{goal6},
+       #{goal7},
+       #{goal8},
+       #{goal9},
+       #{goal10},
+       #{goal11},
+       #{goal12},
+       getdate(),
+       #{user}
+       );
+
+    </update>
+</mapper>

@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>영업관리시스템</title>
+
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+
+<div th:replace="fragments/header :: header"/>
+
+<form th:action="@{/admin/userList}" method="get">
+    <button class="btn btn-md btn-warning btn-block" style="margin-top: 50px;" type="submit">Go To Login Page</button>
+</form>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form autocomplete="off" action="#" th:action="@{/registration}" th:object="${user}" method="post" class="form-horizontal" role="form">
+                <h2>Registration From</h2>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">권한</label>
+                    <div class="col-sm-9">
+                        <label th:each="item : ${radioItems}" th:for="${#ids.next('role')}">
+                            <input type="radio" name="myRadios" th:field="*{role}"
+                                   th:text="${item.key}" th:value="${item.value}"
+                                   th:checked="${item.value == 'ADMIN'}" />
+                                   <!--th:checked="${item.key == 'ADMIN'} ? 'checked' : ''" />-->
+                            <!--th:checked="${item.key == 'USER'} ? 'checked' : ''" />-->
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">성</label>
+                    <div class="col-sm-9">
+                        <label th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" class="validation-message">Last Name</label>
+                        <input type="text" th:field="*{lastName}" placeholder="lastName" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">명</label>
+                    <div class="col-sm-9">
+                        <label th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="validation-message">Name</label>
+                        <input type="text" th:field="*{name}" placeholder="Name" class="form-control" />
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">아이디</label>
+                    <div class="col-sm-9">
+                        <label th:if="${#fields.hasErrors('id')}" th:errors="*{id}" class="validation-message">ID</label>
+                        <input type="text" th:field="*{id}" placeholder="id" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">비밀번호</label>
+                    <div class="col-sm-9">
+                        <label th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="validation-message">Password</label>
+                        <input type="password" th:field="*{password}" placeholder="password" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-block">Register User</button>
+                    </div>
+                </div>
+
+                <span th:utext="${successMessage}"></span>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="fragments/footer :: footer"/>
+</body>
+</html>

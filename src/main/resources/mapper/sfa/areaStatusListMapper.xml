@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.AreaStatusListMapper">
+    <select id="selectAreaStatusListTotal" parameterType="Map" resultType="Map">
+            select * from (
+            select
+            ISNULL(NUM, 9999) AS num,
+            isnull(team_orders, 7777) as teamOrders,
+            isnull(MAX(TEAM_CD),'') as teamCd,
+            isnull(MAX(TEAM_NM),'') as teamNm,
+            isnull(MAX(AREA_CD),'') as areaCd,
+            isnull(MAX(AREA_NM),'') as areaNm,
+            MAX(ID) as id,
+            MAX(name) as name,
+            isnull(sum(total1),0) as total1,
+            isnull(sum(total),0) as total,
+            isnull(sum(totalAmt),0) as totalAmt
+            from (
+            select ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+            --aaaa.*,
+            aaaa.team_orders as team_orders,
+            aaaa.TEAM_CD as TEAM_CD,
+            aaaa.TEAM_NM as TEAM_NM,
+            aaaa.AREA_CD as AREA_CD,
+            aaaa.AREA_NM as AREA_NM,
+            aaaa.ID as id,
+            aaaa.name as name,
+
+            isnull(bbbb.total,0) as total1,
+            isnull(cccc.total,0) as total,
+            ISNULL(cccc.totalAmt,0) as totalAmt
+            from
+            (
+            select AAA.*, ADL.ADMINISTRATIVE_DISTRICT_CODE, ADL.ADMINISTRATIVE_DISTRICT_NAME from
+            (select
+            TEAM_CODE AS team_cd,
+            CL.CODE_NAME AS team_nm,
+            CL.SORT AS TEAM_ORDERs,
+            AREA_CODE as area_cd,
+            area.CODE_NAME as area_nm,
+            area.SORT as AREA_ORDERS,
+            Rank_code as rank_cd,
+            rankk.CODE_NAME AS RANK_NM,
+            rankk.SORT as posi_orders,
+            SALES_MANAGER_CODE as id,
+            SALES_MANAGER_NAME AS name
+            from G_MEMBER_LIST ML
+            left outer  join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+            left outer  join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+            left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE)AAA,
+            B_ADMINISTRATIVE_DISTRICT_LIST ADL
+            where 1=1
+        <if test="salesManagerName !=null and salesManagerName !=''">
+            AND aaa.name LIKE '%' + #{salesManagerName} + '%'
+        </if>
+            )aaaa
+            left outer join
+            (
+            select SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME, count(   ACCOUNT_CODE) as total
+            from (
+            select MAIML.ACCOUNT_CODE,
+            MAIML.SALES_MANAGER_CODE,
+            MAIML.MANAGER_START_DATE,
+            AIL.ACCOUNT_NAME,
+            ADL.ADMINISTRATIVE_DISTRICT_CODE,
+            ADL.ADMINISTRATIVE_DISTRICT_NAME --,
+            --sdl.AMOUNT
+            from --E_SALES_DEADLINE_LIST sdl
+            --join
+            E_ACCOUNT_INFO_LIST AIL
+            --on sdl.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+            --and sdl.SALES_DATE between '2017-07-01' and '2017-07-31'
+            join B_ZIP_DISTRICT_MAPPING_LIST ZDML
+            on AIL.ZIP_CODE = ZDML.ZIP_CODE
+            join B_ADMINISTRATIVE_DISTRICT_LIST ADL
+            on ADL.ADMINISTRATIVE_DISTRICT_CODE = ZDML.ADMINISTRATIVE_DISTRICT_CODE
+            join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            on MAIML.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) B
+            group by SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME
+            ) bbbb
+            on bbbb.ADMINISTRATIVE_DISTRICT_CODE = aaaa.ADMINISTRATIVE_DISTRICT_CODE
+            and bbbb.SALES_MANAGER_CODE = aaaa.id
+            left outer join
+            (
+            select SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME, count(   ACCOUNT_CODE) as total, sum(amount) as totalAmt
+            from (
+            select sdl.ACCOUNT_CODE,
+            MAIML.SALES_MANAGER_CODE,
+            MAIML.MANAGER_START_DATE,
+            AIL.ACCOUNT_NAME,
+            ADL.ADMINISTRATIVE_DISTRICT_CODE,
+            ADL.ADMINISTRATIVE_DISTRICT_NAME ,
+            sdl.AMOUNT
+            from (select ACCOUNT_CODE, SUM(amount) as AMOUNT  from E_SALES_DEADLINE_LIST
+            where 1=1
+            and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+            group by  ACCOUNT_CODE) sdl
+            join E_ACCOUNT_INFO_LIST AIL
+            on sdl.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+            join B_ZIP_DISTRICT_MAPPING_LIST ZDML
+            on AIL.ZIP_CODE = ZDML.ZIP_CODE
+            join B_ADMINISTRATIVE_DISTRICT_LIST ADL
+            on ADL.ADMINISTRATIVE_DISTRICT_CODE = ZDML.ADMINISTRATIVE_DISTRICT_CODE
+            join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+            on MAIML.ACCOUNT_CODE = sdl.ACCOUNT_CODE
+            and MAIML.MANAGER_START_DATE = #{startSearchDate}
+            ) B
+            group by SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME
+            ) cccc
+            on cccc.ADMINISTRATIVE_DISTRICT_CODE = aaaa.ADMINISTRATIVE_DISTRICT_CODE
+            and cccc.SALES_MANAGER_CODE = aaaa.id
+            ) XX
+            GROUP BY ROLLUP(TEAM_ORDERS, num)
+            ) XXX
+            where teamOrders = 7777
+    </select>
+
+    <select id="selectAreaStatusListCount" parameterType="Map" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM (
+                    select ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                    --aaaa.*,
+                    aaaa.team_orders as team_orders,
+                    aaaa.TEAM_CD as TEAM_CD,
+                    aaaa.TEAM_NM as TEAM_NM,
+                    aaaa.AREA_CD as AREA_CD,
+                    aaaa.AREA_NM as AREA_NM,
+                    aaaa.ID as id,
+                    aaaa.name as name,
+                    isnull(bbbb.total,0) as total1,
+                    isnull(cccc.total,0) as total,
+                    ISNULL(cccc.totalAmt,0) as totalAmt
+                    from
+                    (
+                    select AAA.*, ADL.ADMINISTRATIVE_DISTRICT_CODE, ADL.ADMINISTRATIVE_DISTRICT_NAME from
+                    (select
+                    TEAM_CODE AS team_cd,
+                    CL.CODE_NAME AS team_nm,
+                    CL.SORT AS TEAM_ORDERs,
+                    AREA_CODE as area_cd,
+                    area.CODE_NAME as area_nm,
+                    area.SORT as AREA_ORDERS,
+                    Rank_code as rank_cd,
+                    rankk.CODE_NAME AS RANK_NM,
+                    rankk.SORT as posi_orders,
+                    SALES_MANAGER_CODE as id,
+                    SALES_MANAGER_NAME AS name
+                    from G_MEMBER_LIST ML
+                    left outer  join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+                    left outer  join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+                    left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE)AAA,
+                    B_ADMINISTRATIVE_DISTRICT_LIST ADL
+            where 1=1
+        <if test="salesManagerName !=null and salesManagerName !=''">
+            AND aaa.name LIKE '%' + #{salesManagerName} + '%'
+        </if>
+                    )aaaa
+                    left outer join
+                    (
+                    select SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME, count(   ACCOUNT_CODE) as total
+                    from (
+                    select MAIML.ACCOUNT_CODE,
+                    MAIML.SALES_MANAGER_CODE,
+                    MAIML.MANAGER_START_DATE,
+                    AIL.ACCOUNT_NAME,
+                    ADL.ADMINISTRATIVE_DISTRICT_CODE,
+                    ADL.ADMINISTRATIVE_DISTRICT_NAME --,
+                    --sdl.AMOUNT
+                    from --E_SALES_DEADLINE_LIST sdl
+                    --join
+                    E_ACCOUNT_INFO_LIST AIL
+                    --on sdl.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                    --and sdl.SALES_DATE between '2017-07-01' and '2017-07-31'
+                    join B_ZIP_DISTRICT_MAPPING_LIST ZDML
+                    on AIL.ZIP_CODE = ZDML.ZIP_CODE
+                    join B_ADMINISTRATIVE_DISTRICT_LIST ADL
+                    on ADL.ADMINISTRATIVE_DISTRICT_CODE = ZDML.ADMINISTRATIVE_DISTRICT_CODE
+                    join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    on MAIML.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    ) B
+                    group by SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME
+                    ) bbbb
+                    on bbbb.ADMINISTRATIVE_DISTRICT_CODE = aaaa.ADMINISTRATIVE_DISTRICT_CODE
+                    and bbbb.SALES_MANAGER_CODE = aaaa.id
+                    left outer join
+                    (
+                    select SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME, count(   ACCOUNT_CODE) as total, sum(amount) as totalAmt
+                    from (
+                    select sdl.ACCOUNT_CODE,
+                    MAIML.SALES_MANAGER_CODE,
+                    MAIML.MANAGER_START_DATE,
+                    AIL.ACCOUNT_NAME,
+                    ADL.ADMINISTRATIVE_DISTRICT_CODE,
+                    ADL.ADMINISTRATIVE_DISTRICT_NAME ,
+                    sdl.AMOUNT
+                    from (select ACCOUNT_CODE, SUM(amount) as AMOUNT  from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by  ACCOUNT_CODE) sdl
+                    join E_ACCOUNT_INFO_LIST AIL
+                    on sdl.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                    join B_ZIP_DISTRICT_MAPPING_LIST ZDML
+                    on AIL.ZIP_CODE = ZDML.ZIP_CODE
+                    join B_ADMINISTRATIVE_DISTRICT_LIST ADL
+                    on ADL.ADMINISTRATIVE_DISTRICT_CODE = ZDML.ADMINISTRATIVE_DISTRICT_CODE
+                    join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    on MAIML.ACCOUNT_CODE = sdl.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    ) B
+                    group by SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME
+                    ) cccc
+                    on cccc.ADMINISTRATIVE_DISTRICT_CODE = aaaa.ADMINISTRATIVE_DISTRICT_CODE
+                    and cccc.SALES_MANAGER_CODE = aaaa.id
+            ) XX
+            WHERE 1=1
+    </select>
+
+    <select id="selectAreaStatusList" parameterType="Map" resultType="Map">
+        SELECT
+        *
+        FROM (
+                    select ROW_NUMBER() OVER ( ORDER BY CONVERT(int,TEAM_ORDERS), CONVERT(int,AREA_ORDERS), CONVERT(int, POSI_ORDERS)) NUM,
+                    --aaaa.*,
+                    aaaa.team_orders as team_orders,
+                    aaaa.TEAM_CD as TEAM_CD,
+                    isnull(aaaa.TEAM_NM,'') as TEAM_NM,
+                    aaaa.AREA_CD as AREA_CD,
+                    isnull(aaaa.AREA_NM,'') as AREA_NM,
+                    aaaa.ID as id,
+                    aaaa.name as name,
+                    aaaa.ADMINISTRATIVE_DISTRICT_NAME as adName,
+                    isnull(bbbb.total,0) as total1,
+                    isnull(cccc.total,0) as total,
+                    ISNULL(cccc.totalAmt,0) as totalAmt
+                    from
+                    (
+                    select AAA.*, ADL.ADMINISTRATIVE_DISTRICT_CODE, ADL.ADMINISTRATIVE_DISTRICT_NAME from
+                    (select
+                    TEAM_CODE AS team_cd,
+                    CL.CODE_NAME AS team_nm,
+                    CL.SORT AS TEAM_ORDERs,
+                    AREA_CODE as area_cd,
+                    area.CODE_NAME as area_nm,
+                    area.SORT as AREA_ORDERS,
+                    Rank_code as rank_cd,
+                    rankk.CODE_NAME AS RANK_NM,
+                    rankk.SORT as posi_orders,
+                    SALES_MANAGER_CODE as id,
+                    SALES_MANAGER_NAME AS name
+                    from G_MEMBER_LIST ML
+                    left outer  join G_CODE_LIST CL on CL.CODE_ID = ML.TEAM_CODE
+                    left outer  join G_CODE_LIST area on area.CODE_ID = ML.AREA_CODE
+                    left outer join G_CODE_LIST rankk on rankk.CODE_ID = ML.RANK_CODE)AAA,
+                    B_ADMINISTRATIVE_DISTRICT_LIST ADL
+                    where 1=1
+            <if test="salesManagerName !=null and salesManagerName !=''">
+                    AND aaa.name LIKE '%' + #{salesManagerName} + '%'
+            </if>
+                    )aaaa
+                    left outer join
+                    (
+                    select SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME, count(   ACCOUNT_CODE) as total
+                    from (
+                    select MAIML.ACCOUNT_CODE,
+                    MAIML.SALES_MANAGER_CODE,
+                    MAIML.MANAGER_START_DATE,
+                    AIL.ACCOUNT_NAME,
+                    ADL.ADMINISTRATIVE_DISTRICT_CODE,
+                    ADL.ADMINISTRATIVE_DISTRICT_NAME --,
+                    --sdl.AMOUNT
+                    from --E_SALES_DEADLINE_LIST sdl
+                    --join
+                    E_ACCOUNT_INFO_LIST AIL
+                    --on sdl.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                    --and sdl.SALES_DATE between '2017-07-01' and '2017-07-31'
+                    join B_ZIP_DISTRICT_MAPPING_LIST ZDML
+                    on AIL.ZIP_CODE = ZDML.ZIP_CODE
+                    join B_ADMINISTRATIVE_DISTRICT_LIST ADL
+                    on ADL.ADMINISTRATIVE_DISTRICT_CODE = ZDML.ADMINISTRATIVE_DISTRICT_CODE
+                    join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    on MAIML.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    ) B
+                    group by SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME
+                    ) bbbb
+                    on bbbb.ADMINISTRATIVE_DISTRICT_CODE = aaaa.ADMINISTRATIVE_DISTRICT_CODE
+                    and bbbb.SALES_MANAGER_CODE = aaaa.id
+                    left outer join
+                    (
+                    select SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME, count(   ACCOUNT_CODE) as total, sum(amount) as totalAmt
+                    from (
+                    select sdl.ACCOUNT_CODE,
+                    MAIML.SALES_MANAGER_CODE,
+                    MAIML.MANAGER_START_DATE,
+                    AIL.ACCOUNT_NAME,
+                    ADL.ADMINISTRATIVE_DISTRICT_CODE,
+                    ADL.ADMINISTRATIVE_DISTRICT_NAME ,
+                    sdl.AMOUNT
+                    from (select ACCOUNT_CODE, SUM(amount) as AMOUNT  from E_SALES_DEADLINE_LIST
+                    where 1=1
+                    and SALES_DATE between #{startSearchDate} AND #{endSearchDate}
+                    group by  ACCOUNT_CODE) sdl
+                    join E_ACCOUNT_INFO_LIST AIL
+                    on sdl.ACCOUNT_CODE = AIL.ACCOUNT_CODE
+                    join B_ZIP_DISTRICT_MAPPING_LIST ZDML
+                    on AIL.ZIP_CODE = ZDML.ZIP_CODE
+                    join B_ADMINISTRATIVE_DISTRICT_LIST ADL
+                    on ADL.ADMINISTRATIVE_DISTRICT_CODE = ZDML.ADMINISTRATIVE_DISTRICT_CODE
+                    join G_MEMBER_ACCOUNT_INFO_MANAGER_LIST MAIML
+                    on MAIML.ACCOUNT_CODE = sdl.ACCOUNT_CODE
+                    and MAIML.MANAGER_START_DATE = #{startSearchDate}
+                    ) B
+                    group by SALES_MANAGER_CODE,     ADMINISTRATIVE_DISTRICT_CODE,       ADMINISTRATIVE_DISTRICT_NAME
+                    ) cccc
+                    on cccc.ADMINISTRATIVE_DISTRICT_CODE = aaaa.ADMINISTRATIVE_DISTRICT_CODE
+                    and cccc.SALES_MANAGER_CODE = aaaa.id
+            ) XX
+            WHERE 1=1
+            <if test="startPageNum != null and startPageNum != ''">
+                    AND NUM between #{startPageNum} AND  #{endPageNum}
+            </if>
+    </select>
+</mapper>
