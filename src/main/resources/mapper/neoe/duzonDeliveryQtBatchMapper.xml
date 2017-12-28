@@ -7,18 +7,16 @@
          SELECT *
          FROM
          (
-             SELECT	 CD_ITEM AS itemCode
-                    ,DT_IO AS dtSo
-                    ,'BATCH' AS deliveryType
-                    ,NO_PSO_MGMT AS noSo
-                    ,NO_PSOLINE_MGMT AS seqSo
-                    ,QT_IO AS qtDelivery
-            FROM NEOE.NEOE.MM_QTIO
+            SELECT CD_ITEM itemCode
+            , DT_SO dtSo
+            , 'ORDER' deliveryType
+            , NO_SO AS noSo
+            , SEQ_SO AS seqSo
+            , QT_SO AS qtDelivery
+             FROM NEOE.V_SA_SOHL
             WHERE 1=1
-            AND CD_SL = 'DOK'
-            AND DT_IO = #{regDate}
             AND CD_PARTNER = '00546'
-            AND FG_IO = 010
+            AND DT_SO = #{regDate}
 
             UNION ALL
 

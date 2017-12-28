@@ -9,4 +9,7 @@ import java.util.Map;
 public interface ProdReleaseListMapper {
     public List<Map<String, String>> selectProdReleaseList(Map<String, String> ajaxDTO) throws Exception;
     public List<Map<String, String>> selectProdReleaseDetailList(Map<String, String> ajaxDTO) throws Exception;
+    public List<Map<String, String>> selectProdReleaseDashboardList(Map<String, String> ajaxDTO) throws Exception;
+    public List<Map<String, String>> selectProdReleaseDashBoardQuarterList(Map<String, String> ajaxDTO) throws Exception;
+    public List<Map<String, String>> selectProdReleaseDashBoardQuarterxAxisList(Map<String, String> ajaxDTO) throws Exception;
 }

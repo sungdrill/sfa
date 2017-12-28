@@ -48,9 +48,9 @@ function getNeoeList(str) {
                 trHtml += "<a href='javascript://' onClick='getNeoeDetail(this);'>" + value['CD_ITEM'] + "</a>";
                 trHtml += "</td>";
                 trHtml += "<td>" + value['NM_ITEM'];
-                if (value['eQt'] > 0) trHtml += "<button type='button' class='btn pull-right btn-danger btn-xs' onclick='test()' >외부몰</button>";
-                if (value['dQt'] > 0) trHtml += "<button type='button' class='btn pull-right btn-primary btn-xs' onclick='test()' >듀오락</button>";
-                if (value['salesQt'] > 0) trHtml += "<button type='button' class='btn pull-right btn-success btn-xs' onclick='test()' >영업</button>";
+                if (value['eQt'] > 0) trHtml += "<button type='button' class='btn btn-danger btn-sm float-right' onclick='test()' >외부몰</button>";
+                if (value['dQt'] > 0) trHtml += "<button type='button' class='btn btn-primary btn-sm float-right' onclick='test()' >듀오락</button>";
+                if (value['salesQt'] > 0) trHtml += "<button type='button' class='btn btn-success btn-sm float-right' onclick='test()' >영업</button>";
                 var dQt = 0; if (value['dQt'] > 0) dQt = value['dQt'];
                 var eQt = 0;
                 if (value['eQt'] > 0) eQt = value['eQt'];
@@ -98,6 +98,8 @@ var getNeoeDetail = function(a){
     // var year = 1;   // 올해부터 작년까
     // var year = $("#year").val();
 
+    console.log($('#searchDateInput').val());
+    console.log($('#multiCdSl').val());
     if($detail.length){
         $detail.toggle();
     }else{
@@ -114,6 +116,8 @@ var getNeoeDetail = function(a){
                     var str = '';
                     str += '<tr style="display: none" id="'+itemCode+'">';
                     str += '	<td colspan="18">';
+                    str += '<div id="container'+itemCode+'" style="min-width: 1550px; height: 500px;"></div>';
+                    str += '<div style="margin: 5px;"></div>';
                     str += '<table width="100%" class="table table-bordered" id="datatable'+itemCode+'">';
                     str += '	<thead>';
                     str += '	<tr>';
@@ -130,8 +134,6 @@ var getNeoeDetail = function(a){
                     str += '	</tr>';
                     str += '	</thead>';
                     str += '	<tbody>';
-                    str += '<div id="container'+itemCode+'" class="highchart-css"></div>';
-                    str += '<div style="margin: 20px;"></div>';
                     var kimal = 0;
                     $.each(data.list, function(key, value) {
                         str += '    <tr>';
@@ -159,7 +161,7 @@ var getNeoeDetail = function(a){
                     // str += '<div id="container'+itemCode+'" class="highchart-css"></div>';
                     // str += '<div style="margin: 20px;"></div>';
                     str += '<script type="text/javascript">';
-                    str += "    Highcharts.chart('container"+itemCode+"', {";
+                    str += "    itemContainer = Highcharts.chart('container"+itemCode+"', {";
 
                     str += "data: {";
                     str += "    table: 'datatable"+itemCode+"'";
@@ -179,7 +181,20 @@ var getNeoeDetail = function(a){
                     str += "credits: {";
                     str += "    enabled: false";
                     str += "}";
+                    // str += "},";
+                    // str += "responsive: {";
+                    // str += "    rules: [{";
+                    // str += "        condition: {";
+                    // str += "            maxWidth: 1920";
+                    // str += "        }";
+                    // str += "    }]";
+                    // str += "}";
                     str += "});";
+                    // str += "itemContainer.redraw();";
+                    // str += "itemContainer.reflow();";
+                    str += " var windowWidth = $( window ).width();";
+                    str += "console.log('::'+windowWidth);";
+                    str += "itemContainer.setSize(windowWidth-350, 500);;";
                     str += "</script>";
                     str += '	</td>';
                     str += '</tr>';

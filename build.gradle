@@ -56,6 +56,17 @@ dependencies {
 	compile("com.navercorp.lucy:lucy-xss:1.6.3")
 	compile("com.navercorp.lucy:lucy-xss-servlet:2.0.0")
 
+	//
+	compile("org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16")
+	compile files('libs/log4sql.jar')
+	compile files('libs/sqljdbc41.jar')
+	compile("org.slf4j:jcl-over-slf4j:1.7.14")
+
+	// https://mvnrepository.com/artifact/com.google.code.gson/gson
+	compile ("com.google.code.gson:gson:2.7")
+
+	compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.8.1'
+
 	runtime('org.springframework.boot:spring-boot-devtools')
 //	customProvidedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
 	providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')

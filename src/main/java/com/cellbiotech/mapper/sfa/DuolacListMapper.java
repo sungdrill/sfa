@@ -9,4 +9,5 @@ import java.util.Map;
 public interface DuolacListMapper {
     public int selectDuolacListCount(Map<String, String> ajaxDTO) throws Exception;
     public List<Map<String, String>> selectDuolacList(Map<String, String> ajaxDTO) throws Exception;
+    public List<Map<String, Object>> selectDuolacDashboardList(Map<String, String> ajaxDTO) throws Exception;
 }

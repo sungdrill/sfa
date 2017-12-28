@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -71,7 +72,17 @@ public class DefaultController {
             modelAndView.addObject("userName", "Welcome " + user.getLastName() + " " + user.getName() + " (" + user.getId() + ")");
             modelAndView.addObject("adminMessage","Content Available Only for Users with "+ auth.getAuthorities() +" Role");
             modelAndView.addObject("module", "home");
-            modelAndView.setViewName("home");
+            System.out.println("auth.getAuthorities() :: "+auth.getAuthorities().iterator());
+            for (GrantedAuthority ga : auth.getAuthorities()) {
+                System.out.println("ga.getAuthority().trim() :: "+ga.getAuthority().trim());
+                if (ga.getAuthority().trim().equals("IMA")) {
+//                    modelAndView.setViewName("/ima/dashboard");
+//                    modelAndView.setViewName("home");
+                    return new ModelAndView("redirect:/ima/dashboard");
+                } else {
+                    modelAndView.setViewName("home");
+                }
+            }
         } else {
             modelAndView.setViewName("login");
         }

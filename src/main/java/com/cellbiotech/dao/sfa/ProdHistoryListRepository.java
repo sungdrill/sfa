@@ -17,8 +17,12 @@ import java.util.List;
 @Repository
 public interface ProdHistoryListRepository extends JpaRepository<ProdHistoryList, String> {
     Page<ProdHistoryList> findAll(Pageable pageable);
+    Page<ProdHistoryList> findAllByIdProdCodeContainingAndDelYnAndProdNameContainingAndIdInputDateBetween(String prodCode, String delYn, String prodName, Date form, Date to, Pageable pageable);
+    Page<ProdHistoryList> findAllByIdProdCodeContainingAndDelYnAndProdNameContaining(String prodCode, String delYn, String prodName, Pageable pageable);
+
+    List<ProdHistoryList> findAllByIdProdCodeContainingAndDelYnAndProdNameContainingAndIdInputDateBetween(String prodCode, String delYn, String prodName, Date form, Date to);
+    List<ProdHistoryList> findAllByIdProdCodeContainingAndDelYnAndProdNameContaining(String prodCode, String delYn, String prodName);
 
     List<ProdHistoryList> findAllByIdProdCodeAndIdInputDate(String prodCode, Date inputDate);
     List<ProdHistoryList> findAllByIdProdCodeAndIdInputDateBetween(String prodCode, Date form, Date to, Sort sort);
-
 }

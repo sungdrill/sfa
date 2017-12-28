@@ -9,8 +9,28 @@
     <title>재고관리시스템</title>
 
     <div th:replace="fragments/header :: header-css"/>
+    <link th:href="@{/vendor/datatables/dataTables.bootstrap4.css}"  href="../../vendor/datatables/dataTables.bootstrap4.css" rel="stylesheet"/>
+    <style>
+        .scroll-to-top {
+            position: fixed;
+            right: 15px;
+            bottom: 53px;
+            display: none;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            color: white;
+            background: rgba(52, 58, 64, 0.5);
+            line-height: 45px; }
+        .scroll-to-top:focus, .scroll-to-top:hover {
+            color: white; }
+        .scroll-to-top:hover {
+            background: #343a40; }
+        .scroll-to-top i {
+            font-weight: 800; }
+    </style>
 </head>
-<body>
+<body id="page-top">
 
 <div th:replace="fragments/header :: header"/>
 
@@ -136,8 +156,12 @@
 
 </div>
 <!-- /.container -->
-
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fa fa-angle-up"></i>
+</a>
 <div th:replace="fragments/footer :: footer"/>
+<script src="../../vendor/datatables/jquery.dataTables.js" th:src="@{/vendor/datatables/jquery.dataTables.js}"></script>
+<script src="../../vendor/datatables/dataTables.bootstrap4.js" th:src="@{/vendor/datatables/dataTables.bootstrap4.js}"></script>
 
 <script>
     getProdList(1);
@@ -207,6 +231,15 @@
             }
         });
     };
+
+    $(document).scroll(function() {
+        var scrollDistance = $(this).scrollTop();
+        if (scrollDistance > 100) {
+            $('.scroll-to-top').fadeIn();
+        } else {
+            $('.scroll-to-top').fadeOut();
+        }
+    });
 </script>
 
 </body>

@@ -1,0 +1,460 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>재고관리시스템</title>
+
+    <!-- Bootstrap core CSS-->
+    <!--<link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}"  href="../../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>-->
+    <!-- Custom fonts for this template-->
+    <link th:href="@{/vendor/font-awesome/css/font-awesome.min.css}"  href="../../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <!-- Page level plugin CSS-->
+    <link th:href="@{/vendor/datatables/dataTables.bootstrap4.css}"  href="../../vendor/datatables/dataTables.bootstrap4.css" rel="stylesheet"/>
+    <!-- Custom styles for this template-->
+    <!--<link th:href="@{/css/sb-admin.css}"  href="../../css/sb-admin.css" rel="stylesheet"/>-->
+    <div th:replace="fragments/header :: header-css"/>
+</head>
+<body>
+<!-- Navigation-->
+<div th:replace="fragments/header :: header"/>
+
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <!-- Breadcrumbs-->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="#">Dashboard </a>
+            </li>
+            <li class="breadcrumb-item active">IMA</li>
+        </ol>
+        <!-- Icon Cards-->
+        <div class="row">
+            <div class="col-lg-4">
+                <!-- Example Pie Chart Card-->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="fa fa-pie-chart"></i> 자사몰 제품 판매량 비중</div>
+                    <div id="containerDuolacSales" style="min-width: 100%; height: 400px; margin: 0 auto"></div>
+                    <!--<div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>-->
+                </div>
+                <!-- Example Notifications Card-->
+            </div>
+            <div class="col-lg-4">
+                <!-- Example Pie Chart Card-->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="fa fa-pie-chart"></i> 외부몰 제품 판매량 비중</div>
+                    <div id="containerExmallSales" style="min-width: 100%; height: 400px; margin: 0 auto"></div>
+                    <!--<div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>-->
+                </div>
+                <!-- Example Notifications Card-->
+            </div>
+            <div class="col-lg-4">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="fa fa-bar-chart"></i> 사이트별 판매 현황</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="containerSite" style="min-width: 80%; height: 380px; margin: 0 auto"></div>
+                        </div>
+                    </div>
+                    <!--<div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>-->
+                </div>
+            </div>
+        </div>
+        <!-- Area Chart Example-->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="fa fa-area-chart"></i> 상품별 재고, 판매량 현황</div>
+            <!--<div class="card-body">-->
+                <!--<canvas id="myAreaChart" width="100%" height="30"></canvas>-->
+            <!--</div>-->
+            <div id="container" style="min-width: 100%; max-width: 100%; height: 800px; margin: 0 auto"></div>
+            <!--<div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>-->
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="fa fa-bar-chart"></i> 분기별 판매 현황</div>
+            <div class="card-body">
+                <div class="row">
+                    <div id="container2" style="min-width: 50%; height: 400px; margin: 0 auto"></div>
+                    <div class="col-sm-4 text-center my-auto">
+                        <div class="h4 mb-0 text-primary">$34,693</div>
+                        <div class="small text-muted">YTD Revenue</div>
+                        <!--<hr>-->
+                        <div class="h4 mb-0 text-warning">$18,474</div>
+                        <div class="small text-muted">YTD Expenses</div>
+                        <!--<hr>-->
+                        <div class="h4 mb-0 text-success">$16,219</div>
+                        <div class="small text-muted">YTD Margin</div>
+                    </div>
+                </div>
+            </div>
+            <!--<div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>-->
+        </div>
+        <!-- Example DataTables Card-->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="fa fa-table"></i> 자사몰 판매 현황</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-fixed" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th class="text-center">상품코드</th>
+                            <th class="text-center">상품명</th>
+                            <th class="text-center">1차</th>
+                            <th class="text-center">2차</th>
+                            <th class="text-center">3차</th>
+                            <th class="text-center">반품</th>
+                            <th class="text-center">합계</th>
+                            <th class="text-center">외부몰</th>
+                            <th class="text-center">기타</th>
+                            <th class="text-center">재고</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer small text-muted" id="clock"></div>
+        </div>
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
+    <div th:replace="fragments/footer :: footer"/>
+</div>
+</body>
+<script>
+    syncList();
+    syncSfaBatch();
+    function syncList() {
+//        $('#btnSyncList').prop('disabled', true);
+        $.ajax({
+            url:'/syncList.ajax',
+            type:'post',
+            data:{date:$('#searchDateInput').val()},
+            dataType:'json',
+            success:function(data){
+//                $('#btnSyncList').prop('disabled', false);
+//                toastMsg($('#searchDateInput').val()+' 자사몰 패킹:'+data.duolacCnt+'건, 외부몰 패킹:'+data.exmallCnt+'건 동기화 완료했습니다.', getNeoeList);
+            },
+            error:function(error){
+                $('#btnSyncList').prop('disabled', false);
+                console.log(error);
+            }
+        });
+    }
+
+    function syncSfaBatch() {
+//        $('#btnSyncSfaBatch').prop('disabled', true);
+        $.ajax({
+            url:'/syncSfaBatch.ajax',
+            type:'post',
+            data:{date:$('#searchDateInput').val()},
+            dataType:'json',
+            success:function(data){
+//                $('#btnSyncSfaBatch').prop('disabled', false);
+                if (data.isSuccess) {
+//                    toastMsg($('#searchDateInput').val()+' 재고 수량 동기화 성공하였습니다.', getDuolacList);
+                } else {
+
+                }
+            },
+            error:function(error){
+                console.log(error);
+            }
+        });
+    }
+
+    function printClock() {
+
+        var clock = document.getElementById("clock");            // 출력할 장소 선택
+        var currentDate = new Date();                                     // 현재시간
+
+        clock.innerHTML = currentDate; //날짜를 출력해 줌
+
+    }
+
+    printClock();
+
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            pageLength: 24,
+            bPaginate: false,
+            bLengthChange: false,
+            lengthMenu : [ [ 3, 5, 10, -1 ], [ 3, 5, 10, "All" ] ],
+            bAutoWidth: false,
+            processing: true,
+            ordering: true,
+            serverSide: false,
+            searching: true,
+            ajax : {
+                "url":"/ima/duolacDashboardList.ajax",
+                "type":"POST",
+                "data": function (d) {
+                    d.searchDateInput = "";
+                }
+            },
+            columns : [
+                {data: "priority"},
+                {data: "itemCode"},
+                {data: "itemName"},
+                {data: "oneTime", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "twoTime", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "threeTime", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "prodQtyReturn", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "prodQty", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "exmallQty", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "qtHistory", className: "right",
+                    render: function (data, type, row) {
+                        return renderFunc(data, type, row);
+                    }},
+                {data: "qtGoodInv", className: "right",
+                 render: function (data, type, row) {
+                            return renderFunc(data, type, row);
+                        }
+                }
+            ]
+        });
+    });
+
+    function renderFunc(data, type, row) {
+        if (data.toString() == '0') {
+            return '';
+        } else {
+            return data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+    }
+</script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var date = new Date();
+    var mm = date.getMonth() + 1;
+
+    var itemName = [[${itemName}]];
+    var deliveryQty = [[${deliveryQty}]];
+    var duolacQty = [[${duolacQty}]];
+    var exmallQty = [[${exmallQty}]];
+    var warehouseQty = [[${warehouseQty}]];
+    var duolacSalesChart = [[${duolacSalesChart}]];
+    var exmallSalesChart = [[${exmallSalesChart}]];
+    var itemNameBySite = [[${itemNameBySite}]];
+    var duolacQtyBySite = [[${duolacQtyBySite}]];
+    var exmallQtyBySite = [[${exmallQtyBySite}]];
+    itemName = jQuery.parseJSON( itemName );
+    deliveryQty = jQuery.parseJSON( deliveryQty );
+    duolacQty = jQuery.parseJSON( duolacQty );
+    exmallQty = jQuery.parseJSON( exmallQty );
+    warehouseQty = jQuery.parseJSON( warehouseQty );
+    duolacSalesChart = jQuery.parseJSON( duolacSalesChart );
+    exmallSalesChart = jQuery.parseJSON( exmallSalesChart );
+    itemNameBySite = jQuery.parseJSON( itemNameBySite );
+    duolacQtyBySite = jQuery.parseJSON( duolacQtyBySite );
+    exmallQtyBySite = jQuery.parseJSON( exmallQtyBySite );
+
+    /* 재고 판매 현황 */
+    Highcharts.chart('container', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'TODAY 현황'
+        },
+//        subtitle: {
+//            text: 'Source: <a href="https://en.wikipedia.org/wiki/World_population">Wikipedia.org</a>'
+//        },
+        xAxis: {
+            categories: itemName,
+            title: {
+                text: null
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: '수량 (개)',
+                align: 'high'
+            },
+            labels: {
+                overflow: 'justify'
+            }
+        },
+        tooltip: {
+            valueSuffix: ' 개'
+        },
+        plotOptions: {
+            bar: {
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'top',
+            x: -40,
+            y: 80,
+            floating: true,
+            borderWidth: 1,
+            shadow: true
+        },
+        credits: {
+            enabled: false
+        },
+        series: [{
+            name: '창고재고',
+            data: warehouseQty
+        }, {
+            name: '배송실재고',
+            data: deliveryQty
+        }, {
+            name: '자사몰판매량',
+            data: duolacQty
+        }, {
+            name: '외부몰판매량',
+            data: exmallQty
+        }]
+    });
+
+    /* 자사몰 제품 판매량 비중 */
+    Highcharts.chart('containerDuolacSales', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: mm + '월 자사몰 판매량'
+        },
+        tooltip: {
+            pointFormat: '<b>{point.y:.0f}개</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series: [{
+            name: '제품',
+            colorByPoint: true,
+            data: duolacSalesChart
+        }]
+    });
+
+    /* 외부몰 제품 판매량 비중 */
+    Highcharts.chart('containerExmallSales', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: mm + '월 외부몰 판매량'
+        },
+        tooltip: {
+            pointFormat: '<b>{point.y:.0f}개</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series: [{
+            name: '제품',
+            colorByPoint: true,
+            data: exmallSalesChart
+        }]
+    });
+
+    /* 사이트별 제품 판매량 */
+    Highcharts.chart('containerSite', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: mm + '월 사이트별 판매량'
+        },
+        xAxis: {
+            categories: itemNameBySite
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: '판매비율(%)'
+            }
+        },
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+            shared: true
+        },
+        plotOptions: {
+            column: {
+                stacking: 'percent'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series: [{
+            name: '자사몰',
+            data: duolacQtyBySite
+        }, {
+            name: '외부몰',
+            data: exmallQtyBySite
+        }]
+    });
+
+
+    /*]]>*/
+</script>
+
+</html>

@@ -6,6 +6,7 @@
         <!--<link rel="stylesheet" type="text/css"-->
               <!--href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css" />-->
         <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" href="../../css/bootstrap.min.css?version=3.3.7"/>
+        <!--<link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}"  href="../../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>-->
         <link rel="stylesheet" th:href="@{/css/datepicker3.css}" href="../../css/datepicker3.css?version=1.6.4"/>
         <link rel="stylesheet" th:href="@{/css/main.css}"
               href="../../css/main.css" />
@@ -21,12 +22,13 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="#" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'USER'))}">SFA</a>
-            <a class="navbar-brand" href="#" th:if="${#authorization.expression('isAuthenticated()') and #strings.contains(#authentication.principal.authorities,'IMA')}">IMA</a>
+            <a class="navbar-brand" href="/ima/dashboard" th:if="${#authorization.expression('isAuthenticated()') and #strings.contains(#authentication.principal.authorities,'IMA')}">재고관리시스템</a>
         </div>
         <div class="navbar-collapse nav-collapse collapse">
             <ul class="nav navbar-nav">
                 <li th:classappend="${module == 'home' ? 'active' : ''}">
-                    <a href="#" th:href="@{/}">Home</a>
+                    <a class="navbar-brand" th:href="@{/}" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'USER'))}">Home</a>
+                    <a class="navbar-brand" th:href="@{/ima/dashboard}" th:if="${#authorization.expression('isAuthenticated()') and #strings.contains(#authentication.principal.authorities,'IMA')}">Dashboard</a>
                 </li>
                 <li th:classappend="${module == 'userList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()') and #strings.contains(#authentication.principal.authorities,'ADMIN')}">
                     <a href="#" th:href="@{/admin/userList}">사용자 정보</a>
@@ -111,40 +113,57 @@
                         </li>
                     </ul>
                 </li>
-                <li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'IMA'))}">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">재고현황 <span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <!--<li th:classappend="${module == 'imaList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
-                        <!--<a href="#" th:href="@{/ima/imaList}">재고현황</a>-->
+                <!--<li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'IMA'))}">-->
+                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">재고현황 <span class="caret"></span></a>-->
+                    <!--<ul class="dropdown-menu" role="menu">-->
+                        <!--&lt;!&ndash;<li th:classappend="${module == 'imaList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">&ndash;&gt;-->
+                        <!--&lt;!&ndash;<a href="#" th:href="@{/ima/imaList}">재고현황</a>&ndash;&gt;-->
+                        <!--&lt;!&ndash;</li>&ndash;&gt;-->
+                        <!--<li th:classappend="${module == 'neoeList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
+                            <!--<a href="#" th:href="@{/neoe/neoeList}">재고현황</a>-->
                         <!--</li>-->
-                        <li th:classappend="${module == 'neoeList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
-                            <a href="#" th:href="@{/neoe/neoeList}">재고현황</a>
-                        </li>
-                    </ul>
+                    <!--</ul>-->
+                <!--</li>-->
+                <li th:classappend="${module == 'neoeList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
+                    <a href="#" th:href="@{/neoe/neoeList}">재고현황</a>
                 </li>
-                <li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'IMA'))}">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">판매현황 <span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <!--<li th:classappend="${module == 'imaList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
-                        <!--<a href="#" th:href="@{/ima/imaList}">재고현황</a>-->
-                        <!--</li>-->
-                        <li th:classappend="${module == 'duolacList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
-                            <a href="#" th:href="@{/ima/duolacList}">자사몰 판매 현황</a>
-                        </li>
+                <!--<li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'IMA'))}">-->
+                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">판매현황 <span class="caret"></span></a>-->
+                    <!--<ul class="dropdown-menu" role="menu">-->
+                        <!--&lt;!&ndash;<li th:classappend="${module == 'imaList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">&ndash;&gt;-->
+                        <!--&lt;!&ndash;<a href="#" th:href="@{/ima/imaList}">재고현황</a>&ndash;&gt;-->
+                        <!--&lt;!&ndash;</li>&ndash;&gt;-->
                         <!--<li th:classappend="${module == 'duolacList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
-                        <!--<a href="#" th:href="@{/ima/duolacList}">우선순위</a>-->
+                            <!--<a href="#" th:href="@{/ima/duolacList}">자사몰 판매 현황</a>-->
                         <!--</li>-->
-                    </ul>
+                        <!--&lt;!&ndash;<li th:classappend="${module == 'duolacList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">&ndash;&gt;-->
+                        <!--&lt;!&ndash;<a href="#" th:href="@{/ima/duolacList}">우선순위</a>&ndash;&gt;-->
+                        <!--&lt;!&ndash;</li>&ndash;&gt;-->
+                    <!--</ul>-->
+                <!--</li>-->
+                <li th:classappend="${module == 'duolacList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
+                    <a href="#" th:href="@{/ima/duolacList}">패킹현황</a>
                 </li>
-                <li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'IMA'))}">
+                <!--<li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.principal.authorities,'IMA'))}">-->
+                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">관리 <span class="caret"></span></a>-->
+                    <!--<ul class="dropdown-menu" role="menu">-->
+                        <!--<li th:classappend="${module == 'prodHistoryList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
+                            <!--<a href="#" th:href="@{/ima/prodHistoryList}">상품 입출고 관리</a>-->
+                        <!--</li>-->
+                    <!--</ul>-->
+                <!--</li>-->
+                <li th:classappend="${module == 'prodHistoryList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
+                    <a href="#" th:href="@{/ima/prodHistoryList}">상품 입출고 관리</a>
+                </li>
+                <li class="dropdown" th:if="${#authorization.expression('isAuthenticated()') and (#strings.contains(#authentication.principal.authorities,'ADMIN') or #strings.contains(#authentication.getName(),'ima'))}">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">설정<span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
                         <li th:classappend="${module == 'itemProdList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
                             <a href="#" th:href="@{/ima/itemProdList}">품목-상품 관리</a>
                         </li>
-                        <li th:classappend="${module == 'itemProdList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
-                            <a href="#" th:href="@{/ima/itemProdList}">듀오락 제품 관리</a>
-                        </li>
+                        <!--<li th:classappend="${module == 'itemProdList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
+                            <!--<a href="#" th:href="@{/ima/itemProdList}">듀오락 제품 관리</a>-->
+                        <!--</li>-->
                         <li th:classappend="${module == 'itemList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
                             <a href="#" th:href="@{/ima/itemList}">품목 관리</a>
                         </li>
@@ -154,9 +173,9 @@
                         <li th:classappend="${module == 'prodList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
                             <a href="#" th:href="@{/ima/prodList}">상품 관리</a>
                         </li>
-                        <li th:classappend="${module == 'prodHistoryList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">
-                            <a href="#" th:href="@{/ima/prodHistoryList}">상품 재고현황 관리(배송실)</a>
-                        </li>
+                        <!--<li th:classappend="${module == 'prodHistoryList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
+                            <!--<a href="#" th:href="@{/ima/prodHistoryList}">상품 입출고 관리</a>-->
+                        <!--</li>-->
                         <!--<li th:classappend="${module == 'prodReleaseList' ? 'active' : ''}" th:if="${#authorization.expression('isAuthenticated()')}">-->
                             <!--<a href="#" th:href="@{/ima/prodReleaseList}">상품 판매현황 관리</a>-->
                         <!--</li>-->
@@ -182,5 +201,6 @@
         </div>
     </div>
 </div>
+
 </body>
 </html>

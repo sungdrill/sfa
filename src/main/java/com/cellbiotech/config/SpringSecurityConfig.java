@@ -47,8 +47,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     }
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.
-                addFilterAfter(new AjaxSessionCheckFilter(), ExceptionTranslationFilter.class)
+        http
+                .addFilterAfter(new AjaxSessionCheckFilter(), ExceptionTranslationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
                 .antMatchers("/exmallBatch").permitAll()
@@ -64,8 +64,9 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/home").permitAll()
                 .antMatchers("/login").permitAll()
                 .antMatchers("/registration").permitAll()
-                .antMatchers("/admin/**", "/api/**").hasAuthority("ADMIN")
+                .antMatchers("/admin/**").hasAuthority("ADMIN")
                 .antMatchers("/cpList").permitAll()
+                .antMatchers("//api/**").permitAll()
                 .antMatchers("/mng/**").hasAuthority("MANAGER")
                 .antMatchers("/inv/**").hasAuthority("MANAGER")
                 .antMatchers("/user/**").hasAuthority("USER").anyRequest()
@@ -84,7 +85,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/fonts/**");
+        web.ignoring().antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/fonts/**", "/vendor/**");
     }
 
 }

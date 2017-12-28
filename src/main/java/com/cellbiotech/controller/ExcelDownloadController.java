@@ -18,6 +18,9 @@ import com.cellbiotech.dao.sfa.*;
 import com.cellbiotech.mapper.sfa.*;
 import com.cellbiotech.model.sfa.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -105,6 +108,9 @@ public class ExcelDownloadController {
 
     @Autowired
     private DuolacListMapper duolacListMapper;
+
+    @Autowired
+    private ProdHistoryListRepository prodHistoryListRepository;
 
     @PostMapping(value = "/admin/cpListExcelCount.ajax")
     public ResponseEntity<?> adminCpListListExcelCountAjax(@RequestParam Map<String, String> ajaxDTO) throws Exception {
@@ -1369,7 +1375,7 @@ public class ExcelDownloadController {
             body.add(CommonUtils.getDecimal2String(String.valueOf(item.get("exmallQty")),0)); // 외부몰
             body.add(item.get("기타")); // 기타
             if (item.get("priority") != null) {
-                body.add(CommonUtils.getDecimal2String(String.valueOf(item.get("qtGoodInv")), 5)); // 재고
+                body.add(CommonUtils.getDecimal2String(String.valueOf(item.get("qtGoodInv")), 2)); // 재고
             } else {
                 body.add(""); // 재고
             }
@@ -1399,7 +1405,7 @@ public class ExcelDownloadController {
             body.add(CommonUtils.getDecimal2String(String.valueOf(item.get("prodQty")),5)); // 합계
             body.add(item.get("전일(재고)")); // 기타
             if (item.get("priority") != null) {
-                body.add(CommonUtils.getDecimal2String(String.valueOf(item.get("qtGoodInv")), 5)); // 재고
+                body.add(CommonUtils.getDecimal2String(String.valueOf(item.get("qtGoodInv")), 2)); // 재고
             } else {
                 body.add(""); // 재고 qtGoodInv
 
@@ -1416,6 +1422,91 @@ public class ExcelDownloadController {
         response.setContentType( "application/ms-excel" );
         response.setHeader( "Content-disposition", "attachment; filename=duolacList.xlsx" );
         return new ModelAndView(new ExcelWriteXlsx(), model);
+    }
+
+    /**
+     * 상품 입출고 관리 - 엑셀 카운트 다운로드
+     * @param ajaxDTO
+     * @return
+     * @throws ParseException
+     */
+    @PostMapping(value = "/ima/prodHistoryListExcelCount.ajax")
+    public ResponseEntity<?> imaProdHistoryListExcelCountAjax(@RequestParam Map<String, String> ajaxDTO) throws Exception {
+
+        System.out.println("COUNT :: "+prodHistoryListRepository.count());
+
+        Map<String, Object> rtn = new HashMap<>();
+        rtn.put("cnt", prodHistoryListRepository.count());
+        return new ResponseEntity(rtn, HttpStatus.OK);
+    }
+
+    /**
+     * 상품 입출고 관리 - 엑셀 다운로드
+     * @param ajaxDTO
+     * @param request
+     * @param response
+     * @return
+     * @throws Exception
+     */
+    @GetMapping(value="/ima/prodHistoryListExcel")
+    public ModelAndView imaProdHistoryListExcel(@RequestParam Map<String, String> ajaxDTO, HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        Page<ProdHistoryList> pageList = null;
+
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(new Sort.Order(Sort.Direction.DESC,"id.inputDate"));
+        orders.add(new Sort.Order(Sort.Direction.ASC,"id.prodCode"));
+        orders.add(new Sort.Order(Sort.Direction.ASC,"id.inputSeq"));
+        PageRequest pageRequest = new PageRequest(0, 100000, new Sort(orders));
+
+        if (ajaxDTO.get("searchDateInput").length() > 0) {
+            String fromDate = ajaxDTO.get("searchDateInput") + "-01";
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            String toDate = ajaxDTO.get("searchDateInput") + "-" + DateUtils.getEndDay(fromDate);
+            pageList = prodHistoryListRepository.findAllByIdProdCodeContainingAndDelYnAndProdNameContainingAndIdInputDateBetween(ajaxDTO.get("prodCode"), "N", ajaxDTO.get("prodName"), df.parse(fromDate), df.parse(toDate), pageRequest);
+        } else {
+            pageList = prodHistoryListRepository.findAllByIdProdCodeContainingAndDelYnAndProdNameContaining(ajaxDTO.get("prodCode"), "N", ajaxDTO.get("prodName"), pageRequest);
+
+        }
+
+        Map<String, Object> model = new HashMap<>();
+
+        model.put("sheetname", "상품리스트"); //Sheet Name
+
+        List<String> headers = new ArrayList<>();
+        headers.add("상품코드");
+        headers.add("상품명");
+        headers.add("입력일");
+        headers.add("분류");
+        headers.add("수량");
+        model.put("headers", headers); //headers List
+
+        List<List<String>> bodyList = new ArrayList<>();
+        for(ProdHistoryList item : pageList) {
+
+            List<String> body = new ArrayList<>();
+
+            body.add(item.getId().getProdCode());   // 상품코드
+            body.add(item.getProdName());           // 상품명
+            body.add(item.getId().getInputDate().toString());  // 입력일
+            if (item.getInputType().equals("1")) {
+                body.add("+");   // 분류
+            } else {
+                body.add("-");   // 분류
+            }
+            body.add(CommonUtils.getDecimal2String(String.valueOf(item.getOutItem()),2));              // 수량
+            bodyList.add(body);
+        }
+
+        model.put("body", bodyList); //body List
+        System.out.println(bodyList.size());
+
+        Cookie cookie = new Cookie("fileDownload", "true");
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        response.setContentType( "application/ms-excel" );
+        response.setHeader( "Content-disposition", "attachment; filename=prodHistoryList.xlsx" );
+        return new ModelAndView(new ExcelWriteXlsx2(), model);
     }
 
     @PostMapping(value = "/ima/prodReleaseListExcelCount.ajax")

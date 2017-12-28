@@ -52,6 +52,45 @@
                     AND YM_IO <= LEFT(#{searchDateInput}, 6)-1
                     ]]>
                     GROUP BY a.CD_ITEM, a.YY_INV,a.YM_IO
+
+                    /* 상품 입출고 현황 s  */
+                    UNION ALL
+
+                    SELECT	 PROD_CODE AS CD_ITEM
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 4) AS YY_INV
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 6) AS YM_IO
+                            ,SUM(CASE INPUT_TYPE WHEN '1' THEN OUT_ITEM
+                            WHEN '2' THEN - OUT_ITEM END  ) AS QT_DELIVERY
+                            , 0 AS QT_DUOLAC
+                            , 0 AS QT_EXMALL
+                    FROM I_PROD_HISTORY_LIST
+                    WHERE 1=1
+                    AND DEL_YN = 'N'
+                    <![CDATA[
+                    AND LEFT(REPLACE(INPUT_DATE, '-', ''), 6) >=CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4)) + '01'
+                    AND LEFT(REPLACE(INPUT_DATE, '-', ''), 6) <= LEFT(#{searchDateInput}, 6)-1
+                    ]]>
+                    GROUP BY PROD_CODE, LEFT(REPLACE(INPUT_DATE, '-', ''), 4), LEFT(REPLACE(INPUT_DATE, '-', ''), 6)
+
+                    UNION ALL
+
+                    SELECT	 PROD_CODE AS CD_ITEM
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 4) AS YY_INV
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 6) AS YM_IO
+                            ,SUM(CASE INPUT_TYPE WHEN '1' THEN OUT_ITEM
+                            WHEN '2' THEN - OUT_ITEM END  ) AS QT_DELIVERY
+                            , 0 AS QT_DUOLAC
+                            , 0 AS QT_EXMALL
+                    FROM I_PROD_HISTORY_LIST
+                    WHERE 1=1
+                    AND DEL_YN = 'N'
+                    <![CDATA[
+                    AND REPLACE(INPUT_DATE, '-', '') >=CONVERT(NCHAR(6), LEFT(#{searchDateInput}, 6)) + '01'
+                    AND REPLACE(INPUT_DATE, '-', '') <= #{searchDateInput}
+                    ]]>
+                    GROUP BY PROD_CODE, LEFT(REPLACE(INPUT_DATE, '-', ''), 4), LEFT(REPLACE(INPUT_DATE, '-', ''), 6)
+                    /* 상품 입출고 현황 e  */
+
 					UNION ALL
 					SELECT
 							Z.cdItem CD_ITEM,

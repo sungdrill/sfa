@@ -8,4 +8,9 @@
 	<logger name="jdbc.resultset" 		level="OFF" />
 	<logger name="jdbc.resultsettable" 	level="OFF" />
 	<logger name="jdbc.connection" 		level="OFF" />
+
+	<logger name="org.hibernate.SQL" level="DEBUG" />
+	<logger name="org.hibernate.type" level="TRACE" />
+	<logger name="org.hibernate.stat" level="DEBUG" />
+	<logger name="org.hibernate.type.BasicTypeRegistry" level="WARN" />
 </configuration>

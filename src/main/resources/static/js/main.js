@@ -395,6 +395,11 @@ function downloadExcel() {
         data.append('searchDateInput', $('#searchDateInput').val());
         data.append('prodCode', $('#prodCode').val());
         data.append('prodName', $('#prodName').val());
+    } else if (boardIdx == 'prodHistoryList') {
+        url = "/ima/prodHistoryListExcelCount.ajax";
+        data.append('searchDateInput', $('#searchYearMonth2').val());
+        data.append('prodCode', $('#prodCode').val());
+        data.append('prodName', $('#prodName').val());
     } else {
         url = "/admin/cpListExcelCount.ajax";
         data.append('searchYearMonth', $('#searchYearMonth').val());
@@ -446,6 +451,8 @@ function downloadExcel() {
                     location.href='/ima/prodReleaseListExcel?prodCode='+$('#prodCode').val()+'&prodName='+$('#prodName').val()+'&searchYearMonth2='+$('#searchYearMonth2').val()+'&mallCode='+$('#mallCode').val()+'&mallSite='+$('#mallSite').val();
                 } else if (boardIdx == 'duolacList') {
                     location.href='/ima/duolacListExcel?prodCode='+$('#prodCode').val()+'&prodName='+$('#prodName').val()+'&searchDateInput='+$('#searchDateInput').val();
+                } else if (boardIdx == 'prodHistoryList') {
+                    location.href='/ima/prodHistoryListExcel?prodCode='+$('#prodCode').val()+'&prodName='+$('#prodName').val()+'&searchDateInput='+$('#searchYearMonth2').val();
                 } else {
                     location.href='/admin/cpListExcel?searchYearMonth='+$('#searchYearMonth').val();
                 }
@@ -489,7 +496,7 @@ function isNumeric(num, opt){
 
 /** 공통 **/
 function postAjax(url, data, func) {
-    showModal('검색중입니다. 잠시만 기달려주세요.');
+    // showModal('검색중입니다. 잠시만 기달려주세요.');
     $('#error-alert').hide();
     $.ajax({
         beforeSend:function(xhr) {
@@ -529,6 +536,11 @@ function getDateStrYearMonth(myDate) {
     var mm = myDate.getMonth()+1;
     if (mm < 10) mm = "0"+mm;
     return (myDate.getFullYear() + "-" + mm);
+}
+function getDateStrYearMonthDay(myDate) {
+    var mm = myDate.getMonth()+1;
+    if (mm < 10) mm = "0"+mm;
+    return (myDate.getFullYear() + "-" + mm + "-" + myDate.getDate());
 }
 
 function comma(num){
@@ -610,7 +622,7 @@ function checkDownloadCheck(){
         $("#btnExcel").prop("disabled", false);
         return;
     }
-    setTimeout(checkDownloadCheck , 100);
+    setTimeout(checkDownloadCheck , 1000);
 }
 
 function checkUploadCheck(){

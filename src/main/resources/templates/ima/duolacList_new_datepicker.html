@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sd="http://www.thymeleaf.org/spring-data">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title>재고관리시스템</title>
+
+    <!-- Bootstrap core CSS-->
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}"  href="../../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Custom fonts for this template-->
+    <link th:href="@{/vendor/font-awesome/css/font-awesome.min.css}"  href="../../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <!-- Page level plugin CSS-->
+    <link th:href="@{/vendor/datatables/dataTables.bootstrap4.css}"  href="../../vendor/datatables/dataTables.bootstrap4.css" rel="stylesheet"/>
+    <!-- Custom styles for this template-->
+    <link th:href="@{/css/sb-admin.css}"  href="../../css/sb-admin.css" rel="stylesheet"/>
+</head>
+<body class="fixed-nav sticky-footer bg-dark" id="page-top">
+
+<div th:replace="fragments/nav :: nav"/>
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <!-- Breadcrumbs-->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="index.html">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">
+                <a href="/ima/duolacList">판매 현황</a>
+            </li>
+        </ol>
+        <div class="row">
+            <div class="col col-6" style="margin-bottom: 1rem;">
+                <!--<h1>Blank</h1>-->
+                <!--<p>This is an example of a blank page that you can use as a starting point for creating new ones.</p>-->
+                <form class="form-inline" autocomplete="off" action="#" method="post" role="form" id="searchForm">
+                    <input type="hidden" name="pageNumber" id="pageNumber" />
+                    <input type="hidden" name="boardIdx" id="boardIdx" value="duolacList" />
+                    <input type="hidden" name="callName" id="callName" value="getDuolacList" />
+                    <input type="hidden" name="prodCode" id="prodCode" />
+                    <label class="sr-only" for="prodName">상품명</label>
+                    <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="prodName" id="prodName" placeholder="상품명" onkeydown="onKeyDown(this)" />
+
+                    <label class="sr-only" for="searchDateInput">기준일자</label>
+                    <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="searchDateInput" id="searchDateInput" placeholder="yyyy-mm-dd" />
+                    <!--<input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="searchDateInput" id="searchDateInput" placeholder="yyyy-mm-dd" />-->
+
+                </form>
+            </div>
+            <div class="col col-6" style="margin-bottom: 1rem;">
+                <a href="javascript:void(0);" type="button" class="btn btn-danger float-right" onclick="getDuolacList()">검색</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col col-6" style="margin-bottom: 1rem;">
+                <span class="label label-default" id="total-count"></span>
+            </div>
+            <div class="col col-6 align-self-end" style="margin-bottom: 1rem;">
+                <a href="javascript:void(0);" type="button" class="btn btn-primary float-right" id="btnExcel" onclick="downloadExcel()" >엑셀다운로드</a>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <!--<div class="card-header">-->
+            <!--<i class="fa fa-table"></i> Data Table Example</div>-->
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed" style="overflow:hidden;">
+                        <thead>
+                        <tr>
+                            <th class="text-center" style="vertical-align: middle;"></th>
+                            <th class="text-center">상품코드</th>
+                            <th class="text-center">상품명</th>
+                            <th class="text-center">1차</th>
+                            <th class="text-center">2차</th>
+                            <th class="text-center">3차</th>
+                            <th class="text-center">반품</th>
+                            <th class="text-center">합계</th>
+                            <th class="text-center">외부몰</th>
+                            <th class="text-center" style="width: 20%">기타</th>
+                            <th class="text-center">재고</th>
+                        </tr>
+                        </thead>
+                        <tbody id="duolacListBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <!--<div class="card-header">-->
+            <!--<i class="fa fa-table"></i> Data Table Example</div>-->
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed" style="overflow:hidden;">
+                        <thead>
+                        <tr>
+                            <th class="text-center" style="vertical-align: middle;"></th>
+                            <th class="text-center">샘플명</th>
+                            <th class="text-center">1차</th>
+                            <th class="text-center">2차</th>
+                            <th class="text-center">3차</th>
+                            <th class="text-center">반품</th>
+                            <th class="text-center">합계</th>
+                            <th class="text-center">전일(재고)</th>
+                            <th class="text-center">재고</th>
+                        </tr>
+                        </thead>
+                        <tbody id="pointListBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
+    <div th:replace="fragments/navfooter :: navfooter"/>
+</div>
+
+
+</body>
+
+<script>
+    syncList();
+    syncSfaBatch()
+    getDuolacList(1);
+
+    function onKeyDown(obj) {
+        if(event.keyCode == 13) {
+            getDuolacList(1);
+        }
+    }
+
+    function syncList() {
+        console.log($('#searchDateInput').val());
+//        $('#btnSyncList').prop('disabled', true);
+        $.ajax({
+            url:'/syncList.ajax',
+            type:'post',
+            data:{date:$('#searchDateInput').val()},
+            dataType:'json',
+            success:function(data){
+//                $('#btnSyncList').prop('disabled', false);
+//                toastMsg($('#searchDateInput').val()+' 자사몰 패킹:'+data.duolacCnt+'건, 외부몰 패킹:'+data.exmallCnt+'건 동기화 완료했습니다.', getDuolacList);
+//                location.href = '/ima/duolacList';
+//                getDuolacList(1);
+            },
+            error:function(error){
+//                $('#btnSyncList').prop('disabled', false);
+                console.log(error);
+            }
+        });
+    }
+
+    function syncSfaBatch() {
+//        $('#btnSyncSfaBatch').prop('disabled', true);
+        $.ajax({
+            url:'/syncSfaBatch.ajax',
+            type:'post',
+            data:{date:$('#searchDateInput').val()},
+            dataType:'json',
+            success:function(data){
+//                $('#btnSyncSfaBatch').prop('disabled', false);
+                if (data.isSuccess) {
+//                    toastMsg($('#searchDateInput').val()+' 재고 수량 동기화 성공하였습니다.', getDuolacList);
+                } else {
+
+                }
+            },
+            error:function(error){
+                console.log(error);
+            }
+        });
+    }
+
+</script>
+</html>

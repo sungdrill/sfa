@@ -227,6 +227,61 @@ function getProdHistoryList(str) {
 
     var url = "/ima/prodHistoryList.ajax";
 
+    // showModal('검색중입니다. 잠시만 기달려주세요.');
+    $("table tbody").empty();
+    var func = function (data) {
+        // hideModal();
+        $('#total-count').text("총건수 : " + data.totalCount);
+
+        var date = new Date();
+        if (data.totalPageCount > 0) {
+            $('#pagination-here').bootpag({total: data.totalPageCount, page:$("#pageNumber").val()});
+            $("table tbody").empty();
+            $.each(data.list, function(key, value) {
+                var trHtml = "";
+                trHtml = "<tr style='cursor: pointer;'   onclick='setItemHistory(this)'>";
+                trHtml +="<td class='center' style='padding: 3px !important;'>"+value['id']['prodCode']+"</td>";
+                trHtml +="<td class='center' style='padding: 3px !important;'>"+value['id']['inputSeq']+"</td>";
+                trHtml +="<td style='padding: 3px !important;'>"+value['prodName']+"</td>";
+                trHtml +="<td class='center' style='padding: 3px !important;'>"+value['id']['inputDate']+"</td>";
+                if (value['inputType'] == '1') {
+                    trHtml +="<td class='center' style='padding: 3px !important;'>+</td>";
+                } else if (value['inputType'] == '2') {
+                    trHtml +="<td class='center' style='padding: 3px !important;'>-</td>";
+                } else {
+                }
+                trHtml +="<td class='center' style='padding: 3px !important;'>"+value['outItem']+"</td>";
+                trHtml += "<td class='center' style='padding: 3px !important;'><button type='button' class='btn btn-success btn-sm' style='margin-right: 10px; margin-left: 20px;' onclick='setItemHistory(this)'>수정</button>";
+                // trHtml +="<td>"+value['salesPriceSum']+"</td>";
+                trHtml += "</tr>";
+                $("table tbody").append(trHtml);
+            });
+            $('#pagination-here').show();
+        } else {
+            $('#pagination-here').hide();
+        }
+    };
+
+    postAjax(url, data, func);
+
+}
+/** 상품 재고현황 리스트 가져오기 **/
+
+/** 상품 재고현황 리스트 가져오기 **/
+function getProdHistoryList2(str) {
+
+    if (str != null && str != '') {
+        $("#pageNumber").val(str);
+    } else {
+        $("#pageNumber").val(1);
+    }
+
+    var form = $('#searchForm')[0];
+
+    var data = new FormData(form);
+
+    var url = "/ima/prodHistoryList.ajax";
+
     var counter = 0;
     showModal('검색중입니다. 잠시만 기달려주세요.');
     var func = function (data) {
@@ -258,7 +313,7 @@ function getProdHistoryList(str) {
                 // trHtml +="<td class='right'>"+comma(value['inItem'])+"</td>";
                 // trHtml +="<td class='right'>"+comma(value['outItem'])+"</td>";
                 trHtml +="<td><select name='inputType"+counter+"' class='form-control'><option value='1'>반품</option><option value='2'>기획</option><option value='3'>행사</option></select></td>";
-                trHtml +="<td class='center'><button type='button' class='btn btn-success btn-xs' name='btnSaveProdHistory"+counter+"' onclick='saveProdHistory("+counter+")'>저장</button></td>";
+                trHtml +="<td class='center'><button type='button' class='btn btn-success btn-xs' name='btnSaveProdHistory"+counter+"' onclick='saveProdHistory2("+counter+")'>저장</button></td>";
                 trHtml += "</tr>";
                 var row =$("table tbody").append(trHtml);
                 // console.log("row ::: "+ row);
@@ -397,7 +452,57 @@ function prodDetail(a) {
 
 }
 
-function saveProdHistory(cnt) {
+function saveItemHistory() {
+    var inputType = $("#inputType").val();
+    var inputDate = $("#searchDateInput").val();
+    var prodCode = $("#itemCode").val();
+    var inputSeq = $("#inputSeq").val();
+    var outItem = $("#prodQty").val();
+    var prodName = $("#itemName").val();
+    //
+    // console.log(outItem);
+
+    if ($("#itemCode").val().length > 0) {
+
+    } else {
+        alert('품목코드는 필수 입니다.');
+        $("#prodQty").val("");
+        $("#prodQty").focus();
+        return;
+    }
+    if (isNumeric($("#prodQty").val())) {
+    } else {
+        alert('숫자만 입력해주세요.');
+        $("#prodQty").val("");
+        $("#prodQty").focus();
+        return;
+    }
+
+    var form = $('#createItemHistoryModalForm')[0];
+
+    var data = new FormData(form);
+
+    $.ajax({
+        url:'/ima/saveProdHistory.ajax',
+        type:'post',
+        // data:data,
+        data:{itemCode:prodCode, inputSeq:inputSeq, searchDateInput:inputDate, prodQty:outItem, inputType:inputType, itemName:prodName},
+        dataType:'json',
+        success:function(data){
+            closeModalIma('createItemHistoryModal');
+            // getProdHistoryList(1);
+            // $("button[name='btnSaveProdHistory"+cnt+"']").prop("disabled", false);
+            // $("input[name='outItem"+cnt+"']").val('');
+        },
+        error:function(error){
+            closeModalIma('createItemHistoryModal');
+            // $("button[name='btnSaveProdHistory"+cnt+"']").prop("disabled", false);
+            console.log(error);
+        }
+    });
+}
+
+function saveProdHistory2(cnt) {
     // alert("saveProdHistory");
     var inputType = $("select[name='inputType"+cnt+"']").val();
     var inputDate = $("input[name='inputDate"+cnt+"']").val();
@@ -607,6 +712,89 @@ function createItemProd() {
 
 } /** 품목-상품 등록 모달 **/
 
+/** 상품 입출고 등록 모달 **/
+function createItemHistory() {
+    // $('#warnning-alert').hide();
+    // $('#itemCode').val("");
+    // $('#inputSeq').val("");
+    // // $('#groupCodeId').attr("readonly", false);
+    // $('#itemName').val("");
+    // $('#prodCode').val("");
+    // $('#prodName').val("");
+    // $('#prodQty').val("");
+    // $('#inputType').val(1);
+
+    $('#itemCode').attr('readonly', false);
+    $('#searchDateInput').attr('disabled', false);
+    // $("#searchDateInput").datepicker("option", "ignoreReadonly", false);
+    var form = $('#createItemHistoryModalForm')[0];
+
+    form.reset();
+    // $('#mappingDate').val("");
+    var Now = new Date();
+    $('#searchDateInput').val(getDateStrYearMonthDay(Now));
+    $('#createItemHistoryBtn').text("등록");
+    $('#deleteItemHistoryBtn').hide();
+    $('#createItemHistoryModal').modal({backdrop: 'static', keyboard: false});
+    $('#createItemHistoryModal').on('shown.bs.modal', function () {
+        $('#itemCode').focus()
+    });
+
+} /** 품목-상품 등록 모달 **/
+
+/** 상품 입출고 수정 화면 **/
+function setItemHistory(obj) {
+    $('#itemCode').attr('readonly', true);
+    $('#searchDateInput').attr('disabled', true);
+    $('#itemCode').val($(obj).children('td').eq(0).html());
+    $('#inputSeq').val($(obj).children('td').eq(1).html());
+    $('#itemName').val($(obj).children('td').eq(2).html());
+    $('#searchDateInput').val($(obj).children('td').eq(3).html());
+    $('#prodQty').val($(obj).children('td').eq(5).html());
+    if ($(obj).children('td').eq(4).html() == '+') {
+        $('#inputType').val(1);
+    } else {
+        $('#inputType').val(2);
+    }
+    $('#createItemHistoryBtn').text("수정");
+    $('#deleteItemHistoryBtn').show();
+    $('#createItemHistoryModal').modal();
+    $('#createItemHistoryModal').on('shown.bs.modal', function () {
+        $('#prodCode').focus()
+    });
+} /** 품목-상품 수정 화면 **/
+
+/** 상품 입출고 삭제 **/
+function deleteItemHistory() {
+    $('#searchDateInput').attr('disabled', false);
+    // Get form
+    var form = $('#createItemHistoryModalForm')[0];
+
+    var data = new FormData(form);
+
+    var inputDate = $("#searchDateInput").val();
+    var prodCode = $("#itemCode").val();
+    var inputSeq = $("#inputSeq").val();
+
+    $.ajax({
+        type: "POST",
+        url: "/ima/deleteItemHistory.ajax",
+        data: data,
+        processData: false, //prevent jQuery from automatically transforming the data into a query string
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            $('#createItemProdModal').modal('hide');
+            closeModalIma('createItemHistoryModal');
+            // location.href='/ima/itemProdList';
+        },
+        error: function (e) {
+            console.log("ERROR : ", e);
+        }
+    });
+} /** 품목-상품 삭제 **/
+
 /** 팝업 품목 리스트 가져오기 **/
 function popupItemList(str) {
     if (str != null && str != '') {
@@ -625,9 +813,10 @@ function popupItemList(str) {
 
     var url = "/ima/itemList.ajax";
 
-    showModal('검색중입니다. 잠시만 기달려주세요.');;
+    // showModal('검색중입니다. 잠시만 기달려주세요.');
+    $("#popupItemBody").empty();
     var func = function (data) {
-        hideModal();
+        // hideModal();
         if (data.totalPageCount > 0) {
             $('#pagination-popupItemModal').bootpag({total: data.totalPageCount});
             $("#popupItemBody").empty();
@@ -722,6 +911,10 @@ function closeModalIma(page) {
         getItemProdList(1);
     // } else if (page == 'createAccountGradeInfoModal' || page == 'popupAccountInfoModal2') {
     //     getAccountGradeList(1);
+    }
+
+    if (page == 'createItemHistoryModal') {
+        getProdHistoryList(1);
     }
 
 }
@@ -950,8 +1143,6 @@ function getDuolacList(str) {
         $("#pageNumber").val(1);
     }
 
-    console.log($("#searchDateInput").val());
-
     if ($("#searchDateInput").val().length > 0) {
         var startDate = "2017-09-01";
         var startDateArr = startDate.split('-');
@@ -977,23 +1168,26 @@ function getDuolacList(str) {
     var url = "/ima/duolacList.ajax";
 
     // showModal('검색중입니다. 잠시만 기달려주세요.');
+    $("#duolacListBody").empty();
+    $("#pointListBody").empty();
     var func = function (data) {
-        hideModal();
+        // hideModal();
         $('#total-count').text("총건수 : " + data.totalCount);
         if (data.totalPageCount > 0) {
             $('#pagination-here').bootpag({total: data.totalPageCount, page:$("#pageNumber").val()});
-            $("#duolacListBody").empty();
             $.each(data.list, function(key, value) {
                 var trHtml = "";
                 if (value['priority'] == undefined) {
                     trHtml += "<tr class='foo'>";
                     trHtml +="<td class='center'></td>";
-
                     trHtml +="<td>합계</td>";
+
+                    trHtml +="<td></td>";
                 } else {
                     trHtml += "<tr>";
 
                     trHtml +="<td class='center'>"+value['priority']+"</td>";
+                    trHtml +="<td>"+value['itemCode']+"</td>";
                     trHtml +="<td>"+value['itemName']+"</td>";
                 }
                 trHtml +="<td class='right'>"+commaZero2blank(value['oneTime'])+"</td>";
@@ -1002,21 +1196,28 @@ function getDuolacList(str) {
                 trHtml +="<td class='right'>"+commaZero2blank(value['prodQtyReturn'])+"</td>";
                 trHtml +="<td class='right'>"+commaZero2blank(value['prodQty'])+"</td>";
                 trHtml +="<td class='right'>"+commaZero2blank(value['exmallQty'])+"</td>";
-                trHtml +="<td class='center'></td>";
                 if (value['priority'] == undefined) {
-                    trHtml += "<td class='center'></td>";
+                    trHtml += "<td class='right'></td>";
+                } else {
+                    if (value['qtHistory'] == undefined) {
+                        trHtml += "<td class='right'></td>";
+                    } else {
+                        trHtml += "<td class='right'>" + commaZero2blank(value['qtHistory']) + "</td>";
+                    }
+                }
+                if (value['priority'] == undefined) {
+                    trHtml += "<td class='right'></td>";
                 } else {
                     if (value['qtGoodInv'] == undefined) {
-                        trHtml += "<td class='center'></td>";
+                        trHtml += "<td class='right'></td>";
                     } else {
-                        trHtml += "<td class='center'>" + commaZero2blank(value['qtGoodInv']) + "</td>";
+                        trHtml += "<td class='right'>" + commaZero2blank(value['qtGoodInv']) + "</td>";
                     }
                 }
                 trHtml += "</tr>";
                 $("#duolacListBody").append(trHtml);
             });
 
-            $("#pointListBody").empty();
             $.each(data.pointList, function(key, value) {
                 var trHtml = "";
                 if (value['priority'] == undefined) {

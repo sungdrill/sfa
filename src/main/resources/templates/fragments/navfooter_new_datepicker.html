@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+</head>
+<body>
+<!--<div class="navbar navbar-inverse" th:fragment="navfooter">-->
+
+    <div class="container" th:fragment="navfooter">
+
+        <footer class="sticky-footer">
+            <div class="container">
+                <div class="text-center">
+                    <small>Copyright © Cell Biotech 2017</small>
+                </div>
+            </div>
+        </footer>
+        <!-- Scroll to Top Button-->
+        <a class="scroll-to-top rounded" href="#page-top">
+            <i class="fa fa-angle-up"></i>
+        </a>
+        <!-- Logout Modal-->
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                        <a class="btn btn-primary" href="login.html">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bootstrap core JavaScript-->
+        <script src="../../vendor/jquery/jquery.min.js"></script>
+        <script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <!-- Core plugin JavaScript-->
+        <script src="../../vendor/jquery-easing/jquery.easing.min.js"></script>
+        <!-- Page level plugin JavaScript-->
+        <script src="../../vendor/datatables/jquery.dataTables.js"></script>
+        <script src="../../vendor/datatables/dataTables.bootstrap4.js"></script>
+        <script src="../../js/bootstrap-datepicker.js?version=1.6.4" th:src="@{/js/bootstrap-datepicker.js}"></script>
+        <script src="../../js/bootstrap-datepicker.kr.js?version=1.6.4" th:src="@{/js/bootstrap-datepicker.kr.js}"></script>
+        <script src="../../js/jquery.bootpag.min.js?version=1.0.7" th:src="@{/js/jquery.bootpag.min.js}"></script>
+
+        <!-- Custom scripts for this page-->
+        <script src="../../js/highcharts/highcharts.js"></script>
+        <script src="../../js/highcharts/exporting.js"></script>
+        <!-- Custom scripts for all pages-->
+        <script src="../../js/sb-admin.min.js"></script>
+        <script src="../../js/main.js" th:src="@{/js/main.js}"></script>
+        <script src="../../js/sfa.js" th:src="@{/js/sfa.js}"></script>
+        <script src="../../js/ima.js" th:src="@{/js/ima.js}"></script>
+        <script src="../../js/neoe.js" th:src="@{/js/neoe.js}"></script>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h3 id="modalMessage"></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!--</div>-->
+
+</body>
+</html>

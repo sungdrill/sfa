@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.sfa.DashboardMapper">
+    <!-- 제품명 가져오기 -->
+    <select id="selectItemName" parameterType="Map" resultType="Map">
+        SELECT 	IP.ITEM_CODE
+                ,IML.ITEM_SHOR_NAME
+        FROM I_ITEM_PRIORITY IP
+        LEFT OUTER JOIN I_ITEM_MASTER_LIST IML
+        ON IP.ITEM_CODE = IML.ITEM_CODE
+        WHERE 1=1
+        AND IP.ITEM_TYPE_GSP = 'G'
+        ORDER BY IP.ITEM_PRIORITY
+    </select>
+    
+    <!-- 배송실 재고 수량 가져오기 -->
+    <select id="selectDeliveryQty" parameterType="Map" resultType="Map">
+        SELECT  ITEM_CODE AS itemCode
+                , ITEM_NAME AS itemName
+                , ITEM_TYPE_GSP AS itemTypeGsp
+                , ITEM_PRIORITY AS priority
+                , YY_INV AS yyInv
+                , QT_GOOD_INV AS qtGoodInv
+        from(
+            SELECT  BBB.CD_ITEM,
+                    BBB.ITEM_CODE,
+                    BBB.ITEM_NAME,
+                    max(BBB.ITEM_TYPE_GSP) ITEM_TYPE_GSP,
+                    max(BBB.ITEM_PRIORITY) ITEM_PRIORITY,
+                    BBB.YY_INV,
+                    ISNULL(SUM(BASIC_STOCK),0) AS QT_GOOD_INV
+            FROM (
+                SELECT  BB.CD_ITEM,
+                        X.ITEM_CODE,
+                        X.ITEM_NAME,
+                        X.ITEM_TYPE_GSP,
+                        X.ITEM_PRIORITY,
+                        BB.YY_INV,
+                        BB.YM_IO,
+                        BB.QT_DELIVERY - BB.QT_DUOLAC - BB.QT_EXMALL BASIC_STOCK
+                FROM (
+                    SELECT  CD_ITEM
+                            ,LEFT(YM_STANDARD, 4) YY_INV
+                            ,LEFT(YM_STANDARD, 4) + '00' YM_IO
+                            ,QT_GOOD_INV QT_DELIVERY
+                            ,0 QT_DUOLAC
+                            ,0 QT_EXMALL
+                    FROM I_PROD_BASIC_STOCK
+                    WHERE 1=1
+                    AND YM_STANDARD = LEFT(#{searchDateNoDash}, 4)+'00'
+
+                    UNION ALL
+
+                    SELECT	a.CD_ITEM,
+                            a.YY_INV,
+                            a.YM_IO,
+                            SUM(a.QT_DELIVERY) QT_DELIVERY,
+                            SUM(a.QT_DUOLAC) QT_DUOLAC,
+                            SUM(a.QT_EXMALL) QT_EXMALL
+                    FROM I_PROD_INV a
+                    WHERE 1=1
+                    <![CDATA[
+                    AND YM_IO >=CONVERT(NCHAR(4), LEFT(#{searchDateNoDash}, 4)) + '01'
+                    AND YM_IO <= LEFT(#{searchDateNoDash}, 6)-1
+                    ]]>
+                    GROUP BY a.CD_ITEM, a.YY_INV,a.YM_IO
+
+                    /* 상품 입출고 현황 s  */
+                    UNION ALL
+
+                    SELECT	 PROD_CODE AS CD_ITEM
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 4) AS YY_INV
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 6) AS YM_IO
+                            ,SUM(CASE INPUT_TYPE WHEN '1' THEN OUT_ITEM
+                                                 WHEN '2' THEN - OUT_ITEM END  ) AS QT_DELIVERY
+                            , 0 AS QT_DUOLAC
+                            , 0 AS QT_EXMALL
+                    FROM I_PROD_HISTORY_LIST
+                    WHERE 1=1
+                    <![CDATA[
+                    AND LEFT(REPLACE(INPUT_DATE, '-', ''), 6) >=CONVERT(NCHAR(4), LEFT(#{searchDateNoDash}, 4)) + '01'
+                    AND LEFT(REPLACE(INPUT_DATE, '-', ''), 6) <= LEFT(#{searchDateNoDash}, 6)-1
+                    ]]>
+                    GROUP BY PROD_CODE, LEFT(REPLACE(INPUT_DATE, '-', ''), 4), LEFT(REPLACE(INPUT_DATE, '-', ''), 6)
+
+                    UNION ALL
+
+                    SELECT	 PROD_CODE AS CD_ITEM
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 4) AS YY_INV
+                            ,LEFT(REPLACE(INPUT_DATE, '-', ''), 6) AS YM_IO
+                            ,SUM(CASE INPUT_TYPE WHEN '1' THEN OUT_ITEM
+                                                 WHEN '2' THEN - OUT_ITEM END  ) AS QT_DELIVERY
+                            , 0 AS QT_DUOLAC
+                            , 0 AS QT_EXMALL
+                    FROM I_PROD_HISTORY_LIST
+                    WHERE 1=1
+                    <![CDATA[
+                    AND REPLACE(INPUT_DATE, '-', '') >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}, 6)) + '01'
+                    AND REPLACE(INPUT_DATE, '-', '') <= #{searchDateNoDash}
+                    ]]>
+                    GROUP BY PROD_CODE, LEFT(REPLACE(INPUT_DATE, '-', ''), 4), LEFT(REPLACE(INPUT_DATE, '-', ''), 6)
+                    /* 상품 입출고 현황 e  */
+
+                    UNION ALL
+
+                    SELECT  Z.cdItem CD_ITEM,
+                            Z.yyInv YY_INV,
+                            Z.ymIo YM_IO,
+                            SUM(Z.qtDelivery) QT_DELIVERY,
+                            SUM(Z.qtDuolac) QT_DUOLAC,
+                            SUM(Z.qtExmall) QT_EXMALL
+                    FROM
+                    (
+                        SELECT  'SFA' AS cdPlant,
+                                ITEM_CODE AS cdItem,
+                                LEFT(UPDATE_DATE,4) AS yyInv,
+                                REPLACE(UPDATE_DATE, '-', '') ymIo,
+                                0 AS qtDelivery,
+                                SUM(AAA) AS qtDuolac,
+                                SUM(BBB) AS qtExmall
+                        FROM (
+                            SELECT  UPDATE_DATE,
+                                    ITEM_CODE,
+                                    CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+                                    CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+                                    CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+                                    CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+                            FROM (
+                            SELECT LEFT(RELEASE_DATE, 7) UPDATE_DATE, IPL.ITEM_CODE, 'DUOLAC' AS MALL_CODE, DR.PROD_QTY, 'DUOLAC' AS MALL_SITE, DR.SALES_PRICE_SUM FROM I_DUOLAC_RELEASE DR
+                            INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = DR.PROD_CODE
+                            WHERE 1=1
+                            <![CDATA[
+                            AND  RELEASE_DATE >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}  , 6)) + '01'
+                            AND RELEASE_DATE <= #{searchDateNoDash}
+                            ]]>
+
+                            UNION ALL
+
+                            SELECT  LEFT(UPDATE_DATE, 7) UPDATE_DATE
+                                    , IPL.ITEM_CODE
+                                    , PRL.MALL_CODE
+                                    , PRL.PROD_QTY
+                                    , PRL.MALL_SITE
+                                    , 0 AS SALES_PRICE_SUM
+                            FROM I_PROD_RELEASE_LIST PRL
+                            INNER JOIN I_ITEM_PROD_LIST IPL
+                            ON IPL.PROD_CODE = PRL.PROD_CODE
+                            WHERE 1=1
+                            <![CDATA[
+                            AND  UPDATE_DATE >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}  , 6)) + '01'
+                            AND UPDATE_DATE <= #{searchDateNoDash}
+                            ]]>
+                            AND PRL.MALL_SITE = 'EXMALL'
+                            ) A
+                            GROUP BY UPDATE_DATE, ITEM_CODE, MALL_SITE
+                        ) AA
+                        GROUP BY UPDATE_DATE, ITEM_CODE
+
+                        UNION ALL
+
+                        SELECT  'DUZON' AS cdPlant
+                                , ITEM_CODE AS cdItem
+                                , LEFT(DT_SO,4) AS yyInv
+                                , DT_SO AS ymIo
+                                , SUM(QT_DELIVERY) qtDelivery
+                                , 0 qtDuolac
+                                , 0 qtExmall
+                        FROM (
+                            SELECT	LEFT(DT_SO, 6) DT_SO
+                                    ,ITEM_CODE
+                                    ,QT_DELIVERY
+                            FROM I_DUZON_DELIVERY_QT_LIST
+                            WHERE 1=1
+                            <![CDATA[
+                            AND  DT_SO >=CONVERT(NCHAR(6), LEFT(#{searchDateNoDash}    , 6)) + '01'
+                            AND DT_SO <= #{searchDateNoDash}
+                            ]]>
+                        ) C
+                        GROUP BY DT_SO, ITEM_CODE
+                    ) Z
+                    GROUP BY  Z.cdItem,	Z.yyInv,Z.ymIo
+                ) BB
+                RIGHT OUTER JOIN (
+                    SELECT IP.ITEM_CODE, IML.ITEM_NAME,  IP.ITEM_TYPE_GSP, IP.ITEM_PRIORITY
+                    FROM I_ITEM_PRIORITY IP
+                    LEFT OUTER JOIN I_ITEM_MASTER_LIST IML ON IP.ITEM_CODE = IML.ITEM_CODE
+                    WHERE 1=1
+                    AND IP.ITEM_TYPE_GSP = 'G'
+                    --		ORDER BY PR.PROD_TYPE_GSP, PR.PROD_PRIORITY
+                ) X ON BB.CD_ITEM = X.ITEM_CODE
+            ) BBB
+            GROUP BY BBB.CD_ITEM, BBB.ITEM_CODE, BBB.ITEM_NAME, BBB.YY_INV
+        ) BBBB
+        ORDER BY BBBB.ITEM_PRIORITY
+    </select>
+    <!-- 자사몰 판매량 가져오기 -->
+    <select id="selectDuolacQty" parameterType="Map" resultType="Map">
+    </select>
+    <!-- 외부몰 판매량 가져오기 -->
+    <select id="selectExmallQty" parameterType="Map" resultType="Map">
+    </select>
+</mapper>

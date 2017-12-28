@@ -84,4 +84,21 @@ public class CommonUtils {
         return rtn;
     }
 
+    public static String getDecimal2StringZero(String val, int index) {
+        String rtn = "";
+        if (val != null) {
+            if (val.length()-index > 0) {
+                rtn = val.substring(0, val.length() - index);
+                if (rtn.equals("0")) {
+                    rtn = "0";
+                } else {
+
+                }
+            } else { rtn = val;}
+        } else {
+
+        }
+        return rtn;
+    }
+
 }

@@ -1,10 +1,14 @@
 package com.cellbiotech.controller;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+import com.cellbiotech.mapper.neoe.NeoeListMapper;
+import com.cellbiotech.mapper.sfa.DuolacListMapper;
+import com.cellbiotech.mapper.sfa.ProdReleaseListMapper;
+import com.cellbiotech.util.CommonUtils;
+import com.cellbiotech.util.PagingUtil;
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -32,10 +36,16 @@ public class MenuController {
     private UserService userService;
 
     @Autowired
-    OrderListRepository orderListRepository;
+    CodeListRepository codeListRepository;
 
     @Autowired
-    CodeListRepository codeListRepository;
+    private DuolacListMapper duolacListMapper;
+
+    @Autowired
+    private NeoeListMapper neoeListMapper;
+
+    @Autowired
+    private ProdReleaseListMapper prodReleaseListMapper;
 
     @Value("${page.size}")
     private int LIST_PAGE_SIZE;
@@ -447,7 +457,6 @@ public class MenuController {
     }
 
 
-
     /**
      * 재고관리 - 외부몰 페이지
      * @return
@@ -460,6 +469,210 @@ public class MenuController {
         return modelAndView;
     }
 
+
+    /**
+     * 재고관리 - 대시보드 페이지
+     * @return
+     */
+    @GetMapping("/ima/dashboard")
+    public ModelAndView imaDashboard() throws Exception {
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.addObject("module", "dashboard");
+
+        Map<String, String> ajaxDTO = new HashMap<>();
+
+        String strDate = "";
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Date today = new Date();
+            strDate = df.format(today);
+
+        ajaxDTO.put("searchDateInput", strDate);
+        ajaxDTO.put("searchDateNoDash", strDate.replaceAll("-", ""));
+        ajaxDTO.put("prodTypeGsp", "G");
+
+        int totalCnt = duolacListMapper.selectDuolacListCount(ajaxDTO);
+
+        PagingUtil pageInfo = new PagingUtil(totalCnt, 1);
+        pageInfo.setPageSize(200);//재고현황은 한번에 보이도록 작성
+        ajaxDTO.put("startPageNum", Integer.toString(pageInfo.getStartPageNum()));
+        ajaxDTO.put("endPageNum", Integer.toString(pageInfo.getEndPageNum()));
+
+        List<Map<String, Object>> pageList = duolacListMapper.selectDuolacDashboardList(ajaxDTO);
+
+        ajaxDTO.put("searchDateInput", strDate.replaceAll("-", ""));
+        int totalCnt2 = neoeListMapper.selectNeoeListCount(ajaxDTO);
+
+        PagingUtil pageInfo2 = new PagingUtil(totalCnt2, 1);
+        pageInfo2.setPageSize(200);//
+        ajaxDTO.put("startPageNum", Integer.toString(pageInfo2.getStartPageNum()));
+        ajaxDTO.put("endPageNum", Integer.toString(pageInfo2.getEndPageNum()));
+
+        ajaxDTO.put("multiCdSl", "DOK");
+        ajaxDTO.put("ynUseQtInv", "Y");
+        List<Map<String, String>> neoeList = neoeListMapper.selectNeoeList(ajaxDTO);
+
+        ajaxDTO.put("itemTypeGsp", "G");
+        String searchDate = strDate.replaceAll("-", "");
+        String compareDate = searchDate.substring(0,4);
+        ajaxDTO.put("compareDate", compareDate);
+        List<Map<String, String>> duolacSalesList = prodReleaseListMapper.selectProdReleaseDashboardList(ajaxDTO);
+        List<Map<String, String>> quarterList = prodReleaseListMapper.selectProdReleaseDashBoardQuarterList(ajaxDTO);
+        List<Map<String, String>> quarterXaxisList = prodReleaseListMapper.selectProdReleaseDashBoardQuarterxAxisList(ajaxDTO);
+        ajaxDTO.put("itemExmallYn", "Y");
+        List<Map<String, String>> exmallSalesList = prodReleaseListMapper.selectProdReleaseDashboardList(ajaxDTO);
+
+        List<String> itemNameList = new ArrayList<String>();
+        List<Integer> warehouseQtyList = new ArrayList<Integer>();
+        List<Integer> deliveryQtyList = new ArrayList<Integer>();
+        List<Integer> duolacQtyList = new ArrayList<Integer>();
+        List<Integer> exmallQtyList = new ArrayList<Integer>();
+        List<Map<String, Object>> duolacSalesChartList = new ArrayList<>();
+        List<Map<String, Object>> exmallSalesChartList = new ArrayList<>();
+
+        List<String> itemNameBySiteList = new ArrayList<String>();
+        List<Integer> duolacQtyBySiteList = new ArrayList<Integer>();
+        List<Integer> exmallQtyBySiteList = new ArrayList<Integer>();
+
+        List<String> quarterXaxisChartList = new ArrayList<String>();
+        List<Map<String, Object>> quarterChartList = new ArrayList<>();
+
+        List<Map<String, Object>> quarterExmallChartList = new ArrayList<>();
+
+
+        for(Map<String, Object> info : pageList) {
+            // 제품명 가져오기
+            itemNameList.add(info.get("itemShorName").toString());
+            // 배송실 재고 수량 가져오기
+            deliveryQtyList.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("qtGoodInv")), 2))); // .2
+            // 자사몰 판매량 가져오기
+            duolacQtyList.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("prodQty")), 5))); // .2345
+            // 외부몰 판매량 가져오기
+            exmallQtyList.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("exmallQty")), 5)));   // .2345
+
+            for(Map<String, String> neoeInfo : neoeList) {
+                if (info.get("itemCode").toString().equals(neoeInfo.get("CD_ITEM"))) {
+                    warehouseQtyList.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(neoeInfo.get("QT")), 5)));
+                }
+            }
+        }
+
+        for(Map<String, String> info : duolacSalesList) {
+            // 자사몰 제품 판매량 비중
+            Map<String, Object> duolacSales = new HashMap<>();
+            duolacSales.put("name", info.get("itemShorName").toString());
+            duolacSales.put("y", Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("dQty")), 5)));
+            duolacSalesChartList.add(duolacSales);
+        }
+
+        for(Map<String, String> info : exmallSalesList) {
+            // 외부몰 제품 판매량 비중
+            Map<String, Object> exmallSales = new HashMap<>();
+            exmallSales.put("name", info.get("itemShorName").toString());
+            exmallSales.put("y", Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("eQty")), 5)));
+            exmallSalesChartList.add(exmallSales);
+
+            // 사이트별 제품 판매량
+            itemNameBySiteList.add(info.get("itemShorName").toString());
+            // 자사몰 판매량 가져오기
+            duolacQtyBySiteList.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("dQty")), 5))); // .2345
+            // 외부몰 판매량 가져오기
+            exmallQtyBySiteList.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("eQty")), 5)));   // .2345
+        }
+
+
+        for(Map<String, String> infoXaxis : quarterXaxisList) {
+            if (infoXaxis.get("balancedate").compareTo("201609") > 0) {
+                quarterXaxisChartList.add(infoXaxis.get("balancedate").toString());
+            }
+
+        }
+
+        for(Map<String, Object> infoName : pageList) {
+            List<Integer> tempData = new ArrayList<Integer>();
+            for(Map<String, String> info : quarterList) {
+                if (info.get("DT").compareTo("201609") > 0) {
+                    if (infoName.get("itemShorName").toString().equals(info.get("itemShorName").toString())) {
+                        tempData.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("dQty")), 5)));
+                    }
+                }
+            }
+            Map<String, Object> quarter = new HashMap<>();
+            quarter.put("name", infoName.get("itemShorName").toString());
+            quarter.put("data", tempData);
+            // TODO 디비에 컬럼 하나 추가 해서 디비 플래그를 확인해서 처리
+            if (infoName.get("priority").toString().equals("1")
+                    || infoName.get("priority").toString().equals("2")
+                    || infoName.get("priority").toString().equals("4")
+                    || infoName.get("priority").toString().equals("9")
+                    || infoName.get("priority").toString().equals("11")) {
+
+            } else {
+                quarter.put("visible", false);
+
+            }
+            quarterChartList.add(quarter);
+        }
+
+        for(Map<String, Object> infoName : pageList) {
+            List<Integer> tempData = new ArrayList<Integer>();
+
+            if (infoName.get("itemExmallYn").toString().equals("Y")) {
+                for (Map<String, String> info : quarterList) {
+                    if (info.get("DT").compareTo("201609") > 0) {
+                        if (infoName.get("itemShorName").toString().equals(info.get("itemShorName").toString())) {
+                            tempData.add(Integer.parseInt(CommonUtils.getDecimal2StringZero(String.valueOf(info.get("eQty")), 5)));
+                        }
+                    }
+                }
+                Map<String, Object> quarter = new HashMap<>();
+                quarter.put("name", "("+infoName.get("itemShorName").toString()+")");
+                quarter.put("data", tempData);
+                quarterExmallChartList.add(quarter);
+//                quarter.put("type", "spline");
+                // TODO 디비에 컬럼 하나 추가 해서 디비 플래그를 확인해서 처리
+                if (infoName.get("priority").toString().equals("13")) {
+
+                } else {
+                    quarter.put("visible", false);
+
+                }
+                quarterChartList.add(quarter);
+            }
+        }
+
+        String itemName = new Gson().toJson(itemNameList );
+        String deliveryQty = new Gson().toJson(deliveryQtyList );
+        String duolacQty = new Gson().toJson(duolacQtyList );
+        String exmallQty = new Gson().toJson(exmallQtyList );
+        String warehouseQty = new Gson().toJson(warehouseQtyList );
+        String duolacSalesChart = new Gson().toJson(duolacSalesChartList );
+        String exmallSalesChart = new Gson().toJson(exmallSalesChartList );
+        String itemNameBySite = new Gson().toJson(itemNameBySiteList );
+        String duolacQtyBySite = new Gson().toJson(duolacQtyBySiteList );
+        String exmallQtyBySite = new Gson().toJson(exmallQtyBySiteList );
+
+        String quarterXaxisChart = new Gson().toJson(quarterXaxisChartList );
+        String quarterChart = new Gson().toJson(quarterChartList );
+        String quarterExmallChart = new Gson().toJson(quarterExmallChartList );
+
+        modelAndView.addObject("itemName", itemName);
+        modelAndView.addObject("deliveryQty", deliveryQty);
+        modelAndView.addObject("duolacQty", duolacQty);
+        modelAndView.addObject("exmallQty", exmallQty);
+        modelAndView.addObject("warehouseQty", warehouseQty);
+        modelAndView.addObject("duolacSalesChart", duolacSalesChart);
+        modelAndView.addObject("exmallSalesChart", exmallSalesChart);
+        modelAndView.addObject("itemNameBySite", itemNameBySite);
+        modelAndView.addObject("duolacQtyBySite", duolacQtyBySite);
+        modelAndView.addObject("exmallQtyBySite", exmallQtyBySite);
+
+        modelAndView.addObject("quarterXaxisChart", quarterXaxisChart);
+        modelAndView.addObject("quarterChart", quarterChart);
+        modelAndView.addObject("quarterExmallChart", quarterExmallChart);
+
+        modelAndView.setViewName("/ima/dashboard");
+        return modelAndView;
+    }
 
 
     /**

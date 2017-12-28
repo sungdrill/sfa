@@ -730,7 +730,7 @@ public class BatchController {
         // 날짜 더하기
         Calendar cal = Calendar.getInstance();
 //        cal.setTime(new Date());
-        if (ajaxDTO.get("date") == null ) {
+        if (ajaxDTO.get("date") == null ||  ajaxDTO.get("date").equals("")) {
             cal.setTime(new Date());
         } else {
             String inputDate = (String)ajaxDTO.get("date");
@@ -811,7 +811,7 @@ public class BatchController {
         Calendar cal = Calendar.getInstance();
 
         try {
-            if (ajaxDTO.get("date") == null ) {
+            if (ajaxDTO.get("date") == null ||  ajaxDTO.get("date").equals("")) {
                 cal.setTime(new Date());
             } else {
                 String inputDate = (String)ajaxDTO.get("date");
@@ -842,6 +842,62 @@ public class BatchController {
             System.out.println("prodInvList.size() :: "+ prodInvList.size());
             if (prodInvList.size() > 0) {
                 prodInvRepository.save(prodInvList);
+            }
+
+            rtn.put("isSuccess", true);
+        } catch (Exception e) {
+            rtn.put("isSuccess", false);
+
+        }
+
+        return new ResponseEntity(rtn, HttpStatus.OK);
+    }
+
+    /**
+     * 상품 입출고 현황 - 배송실 입고 현황
+     * @return
+     */
+    @GetMapping("/syncDuzonDeliveryQtBatch.ajax")
+    public ResponseEntity<?> syncDuzonDeliveryQtBatchAjax(@RequestParam Map<String, Object> ajaxDTO) throws Exception {
+        System.out.println("::::::::::::::::::::::::::duzonDeliveryQtBatch:::::::::::::::::::::::::::::::::::::::::::::::::");
+        System.out.println("date :::::::::::::::::::: "+ajaxDTO.get("date"));
+
+        Map<String, Object> rtn = new HashMap<>();
+
+        // 특정 형태의 날짜로 값을 뽑기
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar cal = Calendar.getInstance();
+
+        try {
+            if (ajaxDTO.get("date") == null ) {
+                cal.setTime(new Date());
+            } else {
+                String inputDate = (String)ajaxDTO.get("date");
+                Date date = df.parse(inputDate);
+                cal.setTime(date);
+            }
+
+            String strDate = df.format(cal.getTime());
+
+            System.err.println(df.format(cal.getTime()));
+
+            ajaxDTO.put("regDate", strDate.replaceAll("-", ""));
+            System.out.println("regDate :: "+ strDate);
+            List<Map<String, Object>> list = duzonDeliveryQtBatchMapper.selectDuzonDeliveryBatch(ajaxDTO);
+
+            System.out.println("list.size() :: "+list.size());
+            List<DuzonDeliveryQtList> duzonDeliveryQtLists = new ArrayList<>();
+
+            for (Map duzonInfo : list) {
+                DuzonDeliveryQtList duzonDeliveryQtList = new DuzonDeliveryQtList();
+                duzonDeliveryQtList.setId(new DuzonDeliveryQtListId(duzonInfo.get("itemCode").toString(), duzonInfo.get("dtSo").toString(), duzonInfo.get("deliveryType").toString(), duzonInfo.get("noSo").toString(), Integer.parseInt(duzonInfo.get("seqSo").toString())));
+                duzonDeliveryQtList.setQtDelivery(Integer.parseInt(CommonUtils.getDecimal2String(duzonInfo.get("qtDelivery").toString(), 5)));
+                duzonDeliveryQtLists.add(duzonDeliveryQtList);
+            }
+
+            System.out.println("prodInvList.size() :: "+ duzonDeliveryQtLists.size());
+            if (duzonDeliveryQtLists.size() > 0) {
+                duzonDeliveryQtListRepository.save(duzonDeliveryQtLists);
             }
 
             rtn.put("isSuccess", true);

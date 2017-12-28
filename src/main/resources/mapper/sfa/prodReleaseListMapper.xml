@@ -36,6 +36,58 @@
         GROUP BY ITEM_CODE
     </select>
 
+    <select id="selectProdReleaseDashboardList" parameterType="Map" resultType="Map">
+        SELECT	IP.ITEM_CODE  AS itemCode
+                ,IML.ITEM_SHOR_NAME AS itemShorName
+                ,ISNULL(AAA.dQt,0) AS dQty
+                ,ISNULL(AAA.eQt,0)  AS eQty
+        FROM I_ITEM_PRIORITY IP
+        LEFT OUTER JOIN
+        (
+            SELECT ITEM_CODE, SUM(AAA) AS dQt, SUM(CCC) AS dSum, SUM(BBB) AS eQt, SUM(DDD) AS eSum
+            FROM (
+                SELECT ITEM_CODE,
+                CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+                CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+                CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+                CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+                FROM (
+                    SELECT IPL.ITEM_CODE, 'DUOLAC' AS MALL_CODE, DR.PROD_QTY, 'DUOLAC' AS MALL_SITE, DR.SALES_PRICE_SUM FROM I_DUOLAC_RELEASE DR
+                    INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = DR.PROD_CODE
+                    WHERE 1=1
+                    <![CDATA[
+                    AND  RELEASE_DATE >=LEFT(#{searchDateInput}, 6)+'01'
+                    AND RELEASE_DATE <= #{searchDateInput}
+                    ]]>
+
+                    UNION ALL
+
+                    SELECT IPL.ITEM_CODE, PRL.MALL_CODE, PRL.PROD_QTY, PRL.MALL_SITE, 0 AS SALES_PRICE_SUM  FROM I_PROD_RELEASE_LIST PRL
+                    INNER JOIN I_ITEM_PROD_LIST IPL ON IPL.PROD_CODE = PRL.PROD_CODE
+                    WHERE 1=1
+                    <![CDATA[
+                    AND  UPDATE_DATE >=LEFT(#{searchDateInput}, 6)+'01'
+                    AND UPDATE_DATE <= #{searchDateInput}
+                    ]]>
+                    AND PRL.MALL_SITE = 'EXMALL'
+                ) A
+                GROUP BY ITEM_CODE, MALL_SITE
+            ) AA
+            GROUP BY ITEM_CODE
+        ) AAA
+        ON 	IP.ITEM_CODE = AAA.ITEM_CODE
+        LEFT OUTER JOIN I_ITEM_MASTER_LIST IML
+        ON IP.ITEM_CODE = IML.ITEM_CODE
+        WHERE 1=1
+        <if test="itemTypeGsp !=null and itemTypeGsp !=''">
+            AND IP.ITEM_TYPE_GSP = #{itemTypeGsp}
+        </if>
+        <if test="itemExmallYn !=null and itemExmallYn !=''">
+            AND IP.ITEM_EXMALL_YN = #{itemExmallYn}
+        </if>
+        ORDER BY IP.ITEM_PRIORITY
+    </select>
+
     <select id="selectProdReleaseDetailList" parameterType="Map" resultType="Map">
         SELECT  CD_ITEM AS ITEM_CODE
               , YY_INV AS YY_INV
@@ -50,6 +102,186 @@
         AND (CD_ITEM <= #{itemCode} OR #{itemCode} = '' OR #{itemCode} IS NULL)
         ]]>
         GROUP BY CD_ITEM, YY_INV, YM_IO
+    </select>
+
+    <select id="selectProdReleaseDashBoardQuarterList" parameterType="Map" resultType="Map">
+        SELECT  B.balancedate DT
+                , B.ITEM_CODE
+                , (SELECT ITEM_SHOR_NAME FROM I_ITEM_MASTER_LIST c WHERE c.ITEM_CODE = B.ITEM_CODE) AS itemShorName
+                , B.ITEM_PRIORITY
+                , ISNULL(AAAA.dQt,0) AS dQty
+                , ISNULL(AAAA.eQt,0) AS eQty
+        FROM (
+            SELECT * FROM (
+                VALUES
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'01'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'02'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'03'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'04'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'05'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'06'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'07'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'08'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'09'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'10'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'11'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'12'),
+                (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'01')
+                <if test='searchDateInput >= compareDate+"02"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'02')
+                </if>
+                <if test='searchDateInput >= compareDate+"03"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'03')
+                </if>
+                <if test='searchDateInput >= compareDate+"04"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'04')
+                </if>
+                <if test='searchDateInput >= compareDate+"05"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'05')
+                </if>
+                <if test='searchDateInput >= compareDate+"06"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'06')
+                </if>
+                <if test='searchDateInput >= compareDate+"07"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'07')
+                </if>
+                <if test='searchDateInput >= compareDate+"08"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'08')
+                </if>
+                <if test='searchDateInput >= compareDate+"09"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'09')
+                </if>
+                <if test='searchDateInput >= compareDate+"10"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'10')
+                </if>
+                <if test='searchDateInput >= compareDate+"11"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'11')
+                </if>
+                <if test='searchDateInput >= compareDate+"12"'>
+                    ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'12')
+                </if>
+            ) AS t (balancedate), I_ITEM_PRIORITY
+            WHERE 1=1
+        <if test="itemTypeGsp !=null and itemTypeGsp !=''">
+            AND ITEM_TYPE_GSP = #{itemTypeGsp}
+        </if>
+        ) B
+        LEFT OUTER JOIN
+        (
+            SELECT	IP.ITEM_CODE
+                    ,IP.ITEM_PRIORITY
+                    ,IML.ITEM_SHOR_NAME
+                    ,AAA.dQt
+                    ,AAA.eQt
+                    ,AAA.DT
+            FROM I_ITEM_PRIORITY IP
+            LEFT OUTER JOIN
+            (
+                SELECT ITEM_CODE, SUM(AAA) AS dQt, SUM(CCC) AS dSum, SUM(BBB) AS eQt, SUM(DDD) AS eSum, DT DT
+                FROM (
+                    SELECT  ITEM_CODE,
+                            CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(PROD_QTY) ELSE 0 END aaa,
+                            CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(PROD_QTY) ELSE 0 END bbb,
+                            CASE WHEN MALL_SITE = 'DUOLAC' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ccc,
+                            CASE WHEN MALL_SITE = 'EXMALL' THEN SUM(SALES_PRICE_SUM) ELSE 0 END ddd
+                            ,dt AS DT
+                    FROM (
+                        SELECT	IPL.ITEM_CODE
+                                , 'DUOLAC' AS MALL_CODE
+                                , DR.PROD_QTY
+                                , 'DUOLAC' AS MALL_SITE
+                                , DR.SALES_PRICE_SUM
+                                , LEFT(REPLACE(RELEASE_DATE, '-', ''), 6) AS DT
+                        FROM I_DUOLAC_RELEASE DR
+                        INNER JOIN I_ITEM_PROD_LIST IPL
+                        ON IPL.PROD_CODE = DR.PROD_CODE
+                        WHERE 1=1
+                        <![CDATA[
+                        AND  RELEASE_DATE >=CONVERT(NVARCHAR(4), LEFT(#{searchDateInput}, 4)-1)+'0101'
+                        AND RELEASE_DATE <= #{searchDateInput}
+                        ]]>
+                
+                        UNION ALL
+                
+                        SELECT	IPL.ITEM_CODE
+                                , PRL.MALL_CODE
+                                , PRL.PROD_QTY
+                                , PRL.MALL_SITE
+                                , 0 AS SALES_PRICE_SUM
+                                , LEFT(REPLACE(UPDATE_DATE, '-', ''), 6) AS DT
+                        FROM I_PROD_RELEASE_LIST PRL
+                        INNER JOIN I_ITEM_PROD_LIST IPL
+                        ON IPL.PROD_CODE = PRL.PROD_CODE
+                        WHERE 1=1
+                        <![CDATA[
+                        AND  UPDATE_DATE >=CONVERT(NVARCHAR(4), LEFT(#{searchDateInput}, 4)-1)+'0101'
+                        AND UPDATE_DATE <= #{searchDateInput}
+                        ]]>
+                        AND PRL.MALL_SITE = 'EXMALL'
+                    ) A
+                    GROUP BY ITEM_CODE, MALL_SITE, dt
+                ) AA
+                GROUP BY ITEM_CODE, dt
+            ) AAA ON 	IP.ITEM_CODE = AAA.ITEM_CODE
+            LEFT OUTER JOIN I_ITEM_MASTER_LIST IML
+            ON IP.ITEM_CODE = IML.ITEM_CODE
+            WHERE 1=1
+            AND IP.ITEM_TYPE_GSP = 'G'
+            --and IP.ITEM_EXMALL_YN = 'Y'
+        ) AAAA ON B.balancedate = AAAA.DT AND b.ITEM_CODE = AAAA.item_code
+        ORDER BY B.balancedate, B.ITEM_PRIORITY
+    </select>
+
+    <select id="selectProdReleaseDashBoardQuarterxAxisList" parameterType="Map" resultType="Map">
+        SELECT * FROM (
+            VALUES
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'01'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'02'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'03'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'04'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'05'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'06'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'07'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'08'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'09'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'10'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'11'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4) - 1)+'12'),
+            (CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'01')
+            <if test='searchDateInput >= compareDate+"02"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'02')
+            </if>
+            <if test='searchDateInput >= compareDate+"03"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'03')
+            </if>
+            <if test='searchDateInput >= compareDate+"04"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'04')
+            </if>
+            <if test='searchDateInput >= compareDate+"05"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'05')
+            </if>
+            <if test='searchDateInput >= compareDate+"06"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'06')
+            </if>
+            <if test='searchDateInput >= compareDate+"07"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'07')
+            </if>
+            <if test='searchDateInput >= compareDate+"08"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'08')
+            </if>
+            <if test='searchDateInput >= compareDate+"09"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'09')
+            </if>
+            <if test='searchDateInput >= compareDate+"10"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'10')
+            </if>
+            <if test='searchDateInput >= compareDate+"11"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'11')
+            </if>
+            <if test='searchDateInput >= compareDate+"12"'>
+                ,(CONVERT(NCHAR(4), LEFT(#{searchDateInput}, 4))+'12')
+            </if>
+        ) AS t (balancedate)
     </select>
 
     <select id="selectProdReleaseDetailList2" parameterType="Map" resultType="Map">

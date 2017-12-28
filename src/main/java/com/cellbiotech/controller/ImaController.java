@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -257,7 +258,7 @@ public class ImaController {
     }
 
     /**
-     * 상품 재고현황 리스트 가져오기
+     * 상품 입출고 현황 리스트 가져오기
      * @param ajaxDTO
      * @return
      * @throws Exception
@@ -273,22 +274,28 @@ public class ImaController {
             pageNumber = Integer.parseInt(ajaxDTO.get("pageNumber"));
         }
 
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(new Sort.Order(Sort.Direction.DESC,"id.inputDate"));
+        orders.add(new Sort.Order(Sort.Direction.ASC,"id.prodCode"));
+        orders.add(new Sort.Order(Sort.Direction.ASC,"id.inputSeq"));
+        PageRequest pageRequest = new PageRequest(pageNumber-1, LIST_PAGE_SIZE, new Sort(orders));
+
+        Page<ProdHistoryList> pageList = null;
+
         if (ajaxDTO.get("searchYearMonth2").length() > 0) {
-            ajaxDTO.put("searchMappingDate", ajaxDTO.get("searchYearMonth2")+"-01");
+            String fromDate = ajaxDTO.get("searchYearMonth2") + "-01";
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            String toDate = ajaxDTO.get("searchYearMonth2") + "-" + DateUtils.getEndDay(fromDate);
+            pageList = prodHistoryListRepository.findAllByIdProdCodeContainingAndDelYnAndProdNameContainingAndIdInputDateBetween(ajaxDTO.get("prodCode"), "N", ajaxDTO.get("prodName"), df.parse(fromDate), df.parse(toDate), pageRequest);
+        } else {
+            pageList = prodHistoryListRepository.findAllByIdProdCodeContainingAndDelYnAndProdNameContaining(ajaxDTO.get("prodCode"), "N", ajaxDTO.get("prodName"), pageRequest);
+
         }
-        int totalCnt = prodHistoryListMapper.selectProdStandardListCount(ajaxDTO);
-
-        PagingUtil pageInfo = new PagingUtil(totalCnt, pageNumber);
-        pageInfo.setPageSize(200);
-        ajaxDTO.put("startPageNum", Integer.toString(pageInfo.getStartPageNum()));
-        ajaxDTO.put("endPageNum", Integer.toString(pageInfo.getEndPageNum()));
-
-        List<Map<String, String>> pageList = prodHistoryListMapper.selectProdStandardList(ajaxDTO);
 
         Map<String, Object> rtn = new HashMap<>();
-        rtn.put("list", pageList);
-        rtn.put("totalCount", pageInfo.getTotalCount());
-        rtn.put("totalPageCount", pageInfo.getTotalPages());
+        rtn.put("list", pageList.getContent());
+        rtn.put("totalCount", pageList.getTotalElements());
+        rtn.put("totalPageCount", pageList.getTotalPages());
         return new ResponseEntity(rtn, HttpStatus.OK);
     }
 
@@ -304,12 +311,27 @@ public class ImaController {
 
 
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-        List<ProdHistoryList> list = prodHistoryListRepository.findAllByIdProdCodeAndIdInputDate(ajaxDTO.get("prodCode"), df.parse(ajaxDTO.get("inputDate")));
+        List<ProdHistoryList> list = prodHistoryListRepository.findAllByIdProdCodeAndIdInputDate(ajaxDTO.get("itemCode"), df.parse(ajaxDTO.get("searchDateInput")));
         ProdHistoryList prodHistoryList = new ProdHistoryList();
 
-        prodHistoryList.setId(new ProdHistoryListId(ajaxDTO.get("prodCode"), list.size()+1, df.parse(ajaxDTO.get("inputDate"))));
-        prodHistoryList.setOutItem(new BigDecimal(ajaxDTO.get("outItem")));
+        prodHistoryList.setOutItem(new BigDecimal(ajaxDTO.get("prodQty")));
         prodHistoryList.setInputType(ajaxDTO.get("inputType"));
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date javaDate=new Date();
+        System.out.println("Java Date : "+javaDate);
+        String msSqlDate=sdf.format(javaDate).trim();
+        System.out.println(":::::::::::::::::::::: " + msSqlDate);
+        if (ajaxDTO.get("inputSeq") != null && ajaxDTO.get("inputSeq").length() > 0) {
+            prodHistoryList.setId(new ProdHistoryListId(ajaxDTO.get("itemCode"), Integer.parseInt(ajaxDTO.get("inputSeq")), df.parse(ajaxDTO.get("searchDateInput"))));
+            prodHistoryList.setModDate(sdf.parse(msSqlDate));
+            prodHistoryList.setModId(auth.getName());
+        } else {
+            prodHistoryList.setId(new ProdHistoryListId(ajaxDTO.get("itemCode"), list.size()+1, df.parse(ajaxDTO.get("searchDateInput"))));
+            prodHistoryList.setRegDate(sdf.parse(msSqlDate));
+            prodHistoryList.setRegId(auth.getName());
+        }
+        prodHistoryList.setDelYn("N");
+        prodHistoryList.setProdName(ajaxDTO.get("itemName"));
 
         prodHistoryListRepository.save(prodHistoryList);
 
@@ -317,6 +339,35 @@ public class ImaController {
         return new ResponseEntity(rtn, HttpStatus.OK);
     }
 
+    /**
+     * 상품입출고 삭제
+     * @param ajaxDTO
+     * @return
+     */
+    @PostMapping(value = "/ima/deleteItemHistory.ajax")
+    public ResponseEntity<?> imaDeleteItemHistoryAjax(@RequestParam Map<String, String> ajaxDTO) throws Exception {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("auth :: getName() :: "+auth.getName());
+
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        ProdHistoryList prodHistoryList = new ProdHistoryList();
+        prodHistoryList.setId(new ProdHistoryListId(ajaxDTO.get("itemCode"), Integer.parseInt(ajaxDTO.get("inputSeq")), df.parse(ajaxDTO.get("searchDateInput"))));
+        prodHistoryList.setDelYn("Y");
+//        prodHistoryListRepository.delete(prodHistoryList);
+        prodHistoryList.setClosingStock(new BigDecimal(ajaxDTO.get("prodQty")));
+        prodHistoryList.setOutItem(new BigDecimal(ajaxDTO.get("prodQty")));
+        prodHistoryList.setInputType(ajaxDTO.get("inputType"));
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date javaDate=new Date();
+        System.out.println("Java Date : "+javaDate);
+        String msSqlDate=sdf.format(javaDate).trim();
+        prodHistoryList.setModDate(sdf.parse(msSqlDate));
+        prodHistoryList.setModId(auth.getName());
+        prodHistoryListRepository.save(prodHistoryList);
+
+        Map<String, Object> rtn = new HashMap<>();
+        return new ResponseEntity(rtn, HttpStatus.OK);
+    }
     /**
      * 상품코드에 따른 재고현황 리스트 가져오기
      * @param ajaxDTO
@@ -573,6 +624,52 @@ public class ImaController {
         return new ResponseEntity(rtn, HttpStatus.OK);
     }
 
+    /**
+     * 판매현황 - 자사몰 판매현황 가져오기
+     * @param ajaxDTO
+     * @return
+     * @throws Exception
+     */
+    @PostMapping(value="/ima/duolacDashboardList.ajax")
+    public ResponseEntity<?> imaDuolacDashBoardListAjax(@RequestParam Map<String, String> ajaxDTO) throws Exception {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(" auth.isAuthenticated() :: " + auth.isAuthenticated());
+        int pageNumber = 1;
+        if (ajaxDTO.get("pageNumber") == null) {
+            pageNumber = 1;
+        } else {
+            pageNumber = Integer.parseInt(ajaxDTO.get("pageNumber"));
+        }
+
+        String strDate = "";
+        if (ajaxDTO.get("searchDateInput").isEmpty()) {
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Date today = new Date();
+            strDate = df.format(today);
+        } else {
+            strDate = ajaxDTO.get("searchDateInput");
+        }
+
+        ajaxDTO.put("searchDateInput", strDate);
+        ajaxDTO.put("searchDateNoDash", strDate.replaceAll("-", ""));
+        ajaxDTO.put("prodTypeGsp", "G");
+
+        int totalCnt = duolacListMapper.selectDuolacListCount(ajaxDTO);
+
+        PagingUtil pageInfo = new PagingUtil(totalCnt, pageNumber);
+        pageInfo.setPageSize(200);//재고현황은 한번에 보이도록 작성
+        ajaxDTO.put("startPageNum", Integer.toString(pageInfo.getStartPageNum()));
+        ajaxDTO.put("endPageNum", Integer.toString(pageInfo.getEndPageNum()));
+
+        List<Map<String, Object>> pageList = duolacListMapper.selectDuolacDashboardList(ajaxDTO);
+
+        Map<String, Object> rtn = new HashMap<>();
+        rtn.put("data", pageList);
+        rtn.put("totalCount", pageInfo.getTotalCount());
+        rtn.put("totalPageCount", pageInfo.getTotalPages());
+        return new ResponseEntity(rtn, HttpStatus.OK);
+    }
+
 
     /**
      * 기초 재고 관리
@@ -591,7 +688,7 @@ public class ImaController {
             pageNumber = Integer.parseInt(ajaxDTO.get("pageNumber"));
         }
 
-        if (ajaxDTO.get("searchYearMonth2").length() > 0) {
+        if (ajaxDTO.get("searchYearMonth2")!= null && ajaxDTO.get("searchYearMonth2").length() > 0) {
             ajaxDTO.put("searchMappingDate", ajaxDTO.get("searchYearMonth2")+"-01");
         }
         int totalCnt = basicStockListMapper.selectBasicStockListCount(ajaxDTO);

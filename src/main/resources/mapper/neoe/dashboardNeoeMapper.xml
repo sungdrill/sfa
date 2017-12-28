@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cellbiotech.mapper.neoe.DashboardNeoeMapper">
+    <!-- 창고재고 수량 가져오기 -->
+    <select id="selectWarehouseQty" parameterType="Map" resultType="Map">
+    </select>
+</mapper>

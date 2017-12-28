@@ -29,6 +29,26 @@ public class ProdHistoryList {
     @Column(name = "INPUT_TYPE")
     private String inputType;
 
+    @Column(name = "PROD_NAME", updatable = false)
+    private String prodName;
+
+    @Column(name = "DEL_YN")
+    private String delYn;
+
+    @Column(name = "REG_ID", updatable = false)
+    private String regId;
+
+    @Column(name = "REG_DATE", updatable = false)
+    @Temporal(TemporalType.DATE)
+    private Date regDate;
+
+    @Column(name = "MOD_ID")
+    private String modId;
+
+    @Column(name = "MOD_DATE")
+    @Temporal(TemporalType.DATE)
+    private Date modDate;
+
     public ProdHistoryListId getId() {
         return id;
     }
@@ -75,5 +95,53 @@ public class ProdHistoryList {
 
     public void setInputType(String inputType) {
         this.inputType = inputType;
+    }
+
+    public String getProdName() {
+        return prodName;
+    }
+
+    public void setProdName(String prodName) {
+        this.prodName = prodName;
+    }
+
+    public String getDelYn() {
+        return delYn;
+    }
+
+    public void setDelYn(String delYn) {
+        this.delYn = delYn;
+    }
+
+    public String getRegId() {
+        return regId;
+    }
+
+    public void setRegId(String regId) {
+        this.regId = regId;
+    }
+
+    public Date getRegDate() {
+        return regDate;
+    }
+
+    public void setRegDate(Date regDate) {
+        this.regDate = regDate;
+    }
+
+    public String getModId() {
+        return modId;
+    }
+
+    public void setModId(String modId) {
+        this.modId = modId;
+    }
+
+    public Date getModDate() {
+        return modDate;
+    }
+
+    public void setModDate(Date modDate) {
+        this.modDate = modDate;
     }
 }

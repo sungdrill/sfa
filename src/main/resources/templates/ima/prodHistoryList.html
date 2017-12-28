@@ -8,117 +8,222 @@
 
     <title>재고관리시스템</title>
 
-    <div th:replace="fragments/header :: header-css"/>
+    <div th:replace="fragments/nav :: header-css"/>
 </head>
-<body>
+<body class="fixed-nav sticky-footer bg-dark" id="page-top">
 
-<div th:replace="fragments/header :: header"/>
+<div th:replace="fragments/nav :: nav"/>
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <!-- Breadcrumbs-->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="index.html">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">
+                <a href="#" th:href="@{/ima/prodHistoryList}">상품 입출고 관리</a>
+            </li>
+        </ol>
 
-<div class="container-fluid" style="margin-top: 50px;">
-    <div class="panel-group" style="margin-top:20px">
-        <div class="panel panel-primary">
-            <h1><a href="#" th:href="@{/ima/prodHistoryList}">상품 재고현황 관리(배송실)</a></h1>
-        </div>
-    </div>
-
-    <span id="more" style="cursor: pointer;" onclick="if(story.style.display=='none') {story.style.display='';$('#aaa').attr('class', 'glyphicon glyphicon-minus');} else {story.style.display='none';$('#aaa').attr('class', 'glyphicon glyphicon-plus');}"><span id="aaa" class="glyphicon glyphicon-plus" aria-hidden="true">엑셀업로드</span></span>
-    <div id="story" style="display: none">
-    <div class="panel-group" style="margin-top:20px">
-        <div class="panel panel-primary">
-        <form autocomplete="off" action="#"  method="post" class="form-inline" role="form" enctype="multipart/form-data" id="fileUploadForm">
-            <input type="hidden" id="boardIdx" name="boardIdx" value="004"/>
-            <div class="form-group">
-                <label for="fileVal">상품 재고현황 리스트 엑셀업로드</label>
-                <input type="file"  id="fileVal" name="file"/><br/>
-            </div>
-            <button type="submit" class="btn btn-danger" id="btnSubmit">업로드</button>
-        </form>
-        <div>
-            <!--<p>| 상품코드 | 해당년월 | 기초재고 | 입고 | 출고 | 기말재고 |</p>-->
-            <p>| 상품코드 | 입력일 | 재고량 | 분류 |</p>
-        </div>
-        </div>
-    </div>
-    </div>
-
-    <div class="alert alert-success" id="success-alert" style="display: none">
-        <button type="button" class="close" data-dismiss="alert">x</button>
-        <strong>Success! </strong>
-        상품 재고현황 리스트 엑셀파일 업로드.
-    </div>
-
-    <div class="panel-group" style="margin-top:20px">
-        <div class="panel panel-primary">
-        <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
-            <input type="hidden" name="pageNumber" id="pageNumber" />
-            <input type="hidden" name="callName" id="callName" value="getProdHistoryList" />
-            <div class="form-group">
-                <label for="prodCode">상품코드</label>
-                <input type="text" class="form-control" name="prodCode" id="prodCode" placeholder="상품코드" onkeydown="onKeyDown(this)" />
-            </div>
-            <div class="form-group">
-                <label for="prodName">상품명</label>
-                <input type="text" class="form-control" name="prodName" id="prodName" placeholder="상품명" onkeydown="onKeyDown(this)" />
-            </div>
-            <div class="form-group">
-                <label for="searchYearMonth2">해당년월</label>
-                <input type="text" class="form-control" name="searchYearMonth2" id="searchYearMonth2" placeholder="yyyy-mm" value="" />
-            </div>
-            <button type="button" class="btn pull-right btn-danger" onclick="getProdHistoryList()">검색</button>
-        </form>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <span class="label label-default" id="total-count"></span>
-        </div>
-        <div class="col-md-6">
-            <p class="text-right">
-                <button type="button" class="btn btn-primary" id="btnExcel" onclick="downloadExcel()" >엑셀다운로드</button>
-            </p>
-        </div>
-    </div>
-
-    <div class="panel-group" style="margin-top:20px">
-        <div class="panel panel-primary">
-            <div class="table-responsive">
-            <table class="table table-bordered table-hover table-fixed">
-                <thead>
-                <tr>
-                    <th class="text-center">상품코드</th>
-                    <th class="text-center">상품명</th>
-                    <th class="text-center">재고(공장출고+배송실재고+영업+듀오락+외부몰)</th>
-                    <th class="text-center">입력일</th>
-                    <!--<th class="text-center">기초재고</th>-->
-                    <!--<th class="text-center">입고</th>-->
-                    <!--<th class="text-center">출고</th>-->
-                    <th class="text-center">입력</th>
-                    <th class="text-center">분류</th>
-                    <th class="text-center function">기능</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-            </div>
-
-            <div class="alert alert-error" id="error-alert" style="display: none">
-                <button type="button" class="close" data-dismiss="alert">x</button>
-                <strong class="error">Error! </strong>
-                <p id="error-message"></p>
-            </div>
-
-            <div class="col-md-12 col-xs-12 text-center page-margin">
-                <p id="pagination-here" class="pagination-margin" align="center"></p>
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="col col-12">
+                <!--<div class="col col-12" style="margin-bottom: 1rem;">-->
+                    <form autocomplete="off" action="#" method="post" class="form-inline" role="form" id="searchForm">
+                        <input type="hidden" name="pageNumber" id="pageNumber" />
+                        <input type="hidden" name="callName" id="callName" value="getProdHistoryList" />
+                        <input type="hidden" name="boardIdx" id="boardIdx" value="prodHistoryList" />
+                        <label class="sr-only">상품코드</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="prodCode" id="prodCode" placeholder="상품코드" onkeydown="onKeyDown(this)" />
+                        <label class="sr-only">상품명</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="prodName" id="prodName" placeholder="상품명" onkeydown="onKeyDown(this)" />
+                        <label class="sr-only">해당년월</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="searchYearMonth2" id="searchYearMonth2" placeholder="yyyy-mm" value="" />
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
+        <div class="row">
+            <div class="col col-8" style="margin-bottom: 1rem;">
+                <span class="label label-default" id="total-count"></span>
+            </div>
+            <div class="col col-4 align-self-end" style="margin-bottom: 1rem;">
+                <a href="javascript:void(0);" type="button" class="btn btn-danger float-right" onclick="getProdHistoryList()">검색</a>
+                <a href="javascript:void(0);" type="button" class="btn btn-primary float-right" onclick="createItemHistory()" style="margin-right: 5px;">등록</a>
+                <a href="javascript:void(0);" type="button" class="btn btn-primary float-right" id="btnExcel" onclick="downloadExcel()"  style="margin-right: 5px;">엑셀다운로드</a>
+            </div>
+        </div>
+
+        <div class="card mb-12">
+            <!--<div class="card-header">-->
+            <!--<i class="fa fa-table"></i> Data Table Example</div>-->
+            <div class="card-body" style="padding: 10px; padding-bottom: 5px;">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed">
+                        <thead>
+                        <tr>
+                            <th class="text-center">상품코드</th>
+                            <th class="text-center">NO</th>
+                            <th class="text-center">상품명</th>
+                            <th class="text-center">입력일</th>
+                            <th class="text-center">분류</th>
+                            <th class="text-center">수량</th>
+                            <th class="text-center function">기능</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!--<div class="alert alert-error" id="error-alert" style="display: none">-->
+                    <!--<button type="button" class="close" data-dismiss="alert">x</button>-->
+                    <!--<strong class="error">Error! </strong>-->
+                    <!--<p id="error-message"></p>-->
+                <!--</div>-->
+            </div>
+        </div>
+        <div class="col-12 text-center">
+            <!--<p id="pagination-here"></p>-->
+            <p id="pagination-here" class="pagination-margin" align="center" style="margin-bottom: 0px;"></p>
+        </div>
+
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
 </div>
-<!-- /.container -->
 
-<div th:replace="fragments/footer :: footer"/>
+<!-- Modal -->
+<div class="modal fade" id="createItemHistoryModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content" style="width: 450px;" action="#" method="post" id="createItemHistoryModalForm">
+            <div class="modal-header">
+                <h4 class="modal-title" >상품 입출고 현황 등록</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!--<div class="row">-->
+                <!--<div class="col-md-6 col-md-offset-3">-->
+                <!--<form autocomplete="off" action="#" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post" class="form-horizontal" role="form">-->
+                <!--data:{prodCode:prodCode, inputDate:inputDate, outItem:outItem, inputType:inputType},-->
+                <div class="form-group has-error">
+                    <label class="col-sm-3 control-label" for="itemCode">품목코드</label>
+                    <div class="col-sm-8">
+                        <input type="text" name="itemCode" id="itemCode" placeholder="품목" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="itemName">품목명</label>
+                    <div class="col-sm-8">
+                        <input type="text" name="itemName" id="itemName" placeholder="품목명" class="form-control" readonly="true" />
+                    </div>
+                </div>
+
+                <div class="form-group has-error">
+                    <label class="col-sm-3 control-label" for="searchDateInput">해당년월</label>
+                    <div class="col-sm-8">
+                        <input type="text" name="searchDateInput" id="searchDateInput" placeholder="클릭해서 선택해주세요." class="form-control" />
+                    </div>
+                </div>
+                <input type="hidden" name="inputSeq" id="inputSeq"/>
+
+
+                <div class="form-group has-error">
+                    <label class="col-sm-3 control-label" for="prodQty">수량</label>
+                    <div class="col-sm-8">
+                        <input type="text" name="prodQty" id="prodQty" placeholder="수량" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="inputType">구분</label>
+                    <div class="col-sm-8">
+                        <select name="inputType" id="inputType" class="form-control">
+                            <option value="1">(+)더하기</option>
+                            <option value="2">(-)빼기</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="alert alert-warnning" id="warnning-alert" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert">x</button>
+                    <strong>경고! </strong>
+                    <p id="warnning-message"></p>
+                </div>
+                <!--<span th:utext="${successMessage}"></span>-->
+                <!--</form>-->
+                <!--</div>-->
+                <!--</div>-->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveItemHistory();" id="createItemHistoryBtn">등록</button>
+                <button type="button" class="btn btn-danger pull-left" onclick="deleteItemHistory();" id="deleteItemHistoryBtn" style="display: none">삭제</button>
+                <button type="button" class="btn btn-primary" onclick="closeModalIma('createItemHistoryModal');">닫기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="popupItemModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <!-- Modal content-->
+        <!--<form class="modal-content form-horizontal" th:action="@{/admin/groupCodeList/save}" th:object="${groupCodeList}" method="post">-->
+        <form class="modal-content form-horizontal" style="width:500px;" action="javascript:popupItemList(1);" method="post" id="popupItemForm">
+            <input type="hidden" name="relayGroupCode" id="relayGroupCode" value="" />
+            <input type="hidden" name="pageNumber2" id="pageNumber2" />
+            <div class="modal-header">
+                <h5 class="modal-title">품목 정보</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="panel-group">
+                    <div class="panel panel-primary">
+                        <div class="form-group">
+                            <label class="sr-only" for="popupItemName">품목명</label>
+                            <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" name="popupItemName" id="popupItemName" placeholder="품목명" />
+                        </div>
+                        <button type="button" class="btn pull-right btn-danger" onclick="popupItemList(1)">검색</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-fixed">
+                        <thead>
+                        <tr>
+                            <th class="text-center">품목코드</th>
+                            <th class="text-center">품목명</th>
+                        </tr>
+                        </thead>
+                        <tbody id="popupItemBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-md-12 col-xs-12 text-center">
+                    <p id="pagination-popupItemModal" style="margin-top: 30px;" align="center"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeModalIma('popupItemModal');">닫기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- modal -->
+
+<div th:replace="fragments/navfooter :: navfooter"/>
+
+
+
 
 <script>
     getProdHistoryList(1);
@@ -128,7 +233,82 @@
             getProdHistoryList(1);
         }
     }
+
+    $('#itemCode').on('click', function (e) {
+        if ($('#itemCode').val().length == 0) {
+
+            e.preventDefault();
+//    $('#createItemProdModal').modal('hide');
+            $('#popupItemModal').modal({backdrop: 'static', keyboard: false});
+            //popupItemName
+            $('#popupItemModal').on('shown.bs.modal', function () {
+                $('#popupItemName').focus();
+            });
+            popupItemList(1);
+        }
+    });
+
+    $('#itemCode').on('keyup', function (e) {
+        if ($('#itemCode').val().length == 0) {
+            e.preventDefault();
+            $('#accountCode').val('');
+            $('#createMemberAccountInfoModal').modal('hide');
+            $('#popupItemModal').modal({backdrop: 'static', keyboard: false});
+            $('#popupItemModal').on('shown.bs.modal', function () {
+                $('#popupItemName').focus()
+            });
+            popupItemList(1);
+        }
+    });
+
+    $('#searchDateInput').on('click', function (e) {
+        console.log($('#inputSeq').val());
+        if ($('#itemCode').val().length == 0) {
+
+        }
+    });
+
+
+    $('#searchDateInput').on('keyup', function (e) {
+        console.log($('#inputSeq').val());
+        if ($('#itemCode').val().length == 0) {
+        }
+    });
+
+    $.datepicker.setDefaults({
+        dateFormat: 'yy-mm-dd',
+        prevText: '이전 달',
+        nextText: '다음 달',
+        monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+        monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+        dayNames: ['일', '월', '화', '수', '목', '금', '토'],
+        dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+        dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+        showMonthAfterYear: true,
+        yearSuffix: '년'
+    });
+
+    $('#searchYearMonth2').datepicker({
+        changeMonth: true,
+        changeYear: true,
+        showButtonPanel: true,
+        dateFormat: 'yy-mm'
+    }).focus(function() {
+        var thisCalendar = $(this);
+        $('.ui-datepicker-calendar').detach();
+        $('.ui-datepicker-close').click(function() {
+            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+            thisCalendar.datepicker('setDate', new Date(year, month, 1));
+        });
+    });
+
+    $('#searchDateInput').datepicker({
+        changeMonth: true,
+        changeYear: true
+    });
 </script>
+
 
 </body>
 </html>
